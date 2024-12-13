@@ -1,0 +1,104 @@
+{
+  "name": "salesforcedx-vscode-capture-startup-performance",
+  "displayName": "Capture Extension Startup Performance",
+  "description": "Extension that captures the Extension Activation Stats from 'Developer: Startup Performance' and reports the data via telemetry",
+  "version": "1.0.0",
+  "publisher": "salesforce",
+  "repository": {
+    "url": "https://github.com/forcedotcom/salesforcedx-vscode-capture-startup-performance"
+  },
+  "icon": "images/VSCodeBundle.png",
+  "license": "BSD-3-Clause",
+  "engines": {
+    "vscode": "^1.86.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/src/index.js",
+  "dependencies": {
+    "marked": "^14.1.2"
+  },
+  "devDependencies": {
+    "@commitlint/config-conventional": "^19.5.0",
+    "@tsconfig/node18": "^18.2.4",
+    "@types/jest": "^29.5.12",
+    "@types/node": "^18.11.9",
+    "@types/shelljs": "^0.8.15",
+    "@types/vscode": "^1.94.0",
+    "@typescript-eslint/eslint-plugin": "^8.2.0",
+    "commitizen": "^4.2.5",
+    "cz-conventional-changelog": "3.3.0",
+    "esbuild": "^0.23.1",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "9.0.0",
+    "eslint-plugin-header": "3.1.1",
+    "eslint-plugin-import": "2.29.0",
+    "eslint-plugin-jest-formatting": "3.1.0",
+    "eslint-plugin-jsdoc": "46.8.2",
+    "eslint-plugin-prefer-arrow": "1.2.3",
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "prettier": "^3.3.3",
+    "shelljs": "^0.8.5",
+    "ts-jest": "^29.2.5",
+    "ts-loader": "^9.5.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2",
+    "vscode-test": "^1.6.1"
+  },
+  "packaging": {
+    "assets": [
+      "LICENSE",
+      "package.nls.json",
+      "README.md",
+      "images",
+      "dist"
+    ],
+    "packageUpdates": {
+      "main": "dist/index.js",
+      "dependencies": {
+        "applicationinsights": "^3.2.2"
+      },
+      "devDependencies": {}
+    }
+  },
+  "scripts": {
+    "compile": "tsc --build",
+    "compile:clean": "tsc --build --clean",
+    "reinstall": "git checkout -- package-lock.json && git clean -xfd && npm install",
+    "watch": "tsc --build --watch",
+    "prettier": "prettier --write .",
+    "prettier-check": "prettier --check .",
+    "lint": "eslint . --ext .ts",
+    "update-snapshots": "jest --updateSnapshot",
+    "test": "jest --coverage",
+    "bundle:extension": "esbuild ./src/index.ts  --bundle --outfile=dist/index.js --format=cjs --platform=node --external:vscode --minify",
+    "vscode:package": "npm run bundle:extension && ts-node  ./scripts/vsce-bundled-extension.ts",
+    "vsix:install": "find ./ -name '*.vsix' -exec code --install-extension {} \\;",
+    "vsix:install-insiders": "find ./ -name '*.vsix' -exec code-insiders --install-extension {} \\;",
+    "reformat": "node scripts/reformat-with-prettier.js"
+  },
+  "extensionDependencies": [
+    "salesforce.salesforcedx-vscode-core"
+  ],
+  "activationEvents": [
+    "workspaceContains:sfdx-project.json"
+  ],
+  "contributes": {
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "sf.capture.startup.performance",
+          "when": "sf:project_opened"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "sf.capture.startup.performance",
+        "title": "%capture_startup_performance_command_text%"
+      }
+    ]
+  }
+}
