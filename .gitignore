@@ -1,7 +1,9 @@
 node_modules
 out/
+lib/
 dist/
 /coverage
 /junit-custom-unitTests.xml
 *.vsix
 /extension
+.idea/

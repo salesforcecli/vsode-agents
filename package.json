@@ -1,11 +1,11 @@
 {
-  "name": "salesforcedx-vscode-capture-startup-performance",
-  "displayName": "Capture Extension Startup Performance",
-  "description": "Extension that captures the Extension Activation Stats from 'Developer: Startup Performance' and reports the data via telemetry",
-  "version": "1.0.0",
+  "name": "salesforcedx-vscode-agents",
+  "displayName": "Develop Agents",
+  "description": "Agents",
+  "version": "0.0.1",
   "publisher": "salesforce",
   "repository": {
-    "url": "https://github.com/forcedotcom/salesforcedx-vscode-capture-startup-performance"
+    "url": "https://github.com/salesforcecli/vsode-agents"
   },
   "icon": "images/VSCodeBundle.png",
   "license": "BSD-3-Clause",
@@ -17,9 +17,9 @@
   ],
   "main": "./out/src/index.js",
   "dependencies": {
-    "marked": "^14.1.2"
   },
   "devDependencies": {
+    "@salesforce/dev-config": "^4.3.1",
     "@commitlint/config-conventional": "^19.5.0",
     "@tsconfig/node18": "^18.2.4",
     "@types/jest": "^29.5.12",
@@ -64,6 +64,8 @@
     }
   },
   "scripts": {
+    "build": "tsc --build",
+    "build:clean": "tsc --build --clean",
     "compile": "tsc --build",
     "compile:clean": "tsc --build --clean",
     "reinstall": "git checkout -- package-lock.json && git clean -xfd && npm install",
@@ -86,19 +88,5 @@
     "workspaceContains:sfdx-project.json"
   ],
   "contributes": {
-    "menus": {
-      "commandPalette": [
-        {
-          "command": "sf.capture.startup.performance",
-          "when": "sf:project_opened"
-        }
-      ]
-    },
-    "commands": [
-      {
-        "command": "sf.capture.startup.performance",
-        "title": "%capture_startup_performance_command_text%"
-      }
-    ]
   }
 }
