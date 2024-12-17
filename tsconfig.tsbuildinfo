@@ -1,1 +1,1 @@
-{"root":["./src/index.ts"],"version":"5.7.2"}
+{"root":["./src/extension.ts","./src/index.ts","./src/commands/index.ts","./src/commands/openagentinorg.ts","./src/enums/commands.ts"],"version":"5.7.2"}

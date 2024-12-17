@@ -15,13 +15,16 @@
   "categories": [
     "Other"
   ],
-  "main": "./out/src/index.js",
+  "main": "./lib/extension.js",
   "dependencies": {
+    "@salesforce/core": "^8.8.0",
+    "semver": "^7.6.3"
   },
   "devDependencies": {
-    "@salesforce/dev-config": "^4.3.1",
     "@commitlint/config-conventional": "^19.5.0",
+    "@salesforce/dev-config": "^4.3.1",
     "@tsconfig/node18": "^18.2.4",
+    "@types/semver": "7.5.8",
     "@types/jest": "^29.5.12",
     "@types/node": "^18.11.9",
     "@types/shelljs": "^0.8.15",
@@ -88,5 +91,26 @@
     "workspaceContains:sfdx-project.json"
   ],
   "contributes": {
+    "commandPalette": [
+      {
+        "command": "salesforcedx-vscode-agents.openAgentInOrg",
+        "when": "editorLangId == 'xml'"
+      }
+    ],
+    "commands": [
+      {
+        "command": "salesforcedx-vscode-agents.openAgentInOrg",
+        "title": "%salesforcedx-vscode-agents.openAgentInOrg%"
+      }
+    ],
+    "icons": {
+      "agent-open-in-org": {
+        "description": "%salesforcedx-vscode-agents.openAgentInOrg.description%",
+        "default": {
+          "fontPath": "resources/agent-icons.woff",
+          "fontCharacter": "\\E900"
+        }
+      }
+    }
   }
 }
