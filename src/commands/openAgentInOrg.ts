@@ -2,7 +2,7 @@ import * as vscode from 'vscode';
 import { Commands } from '../enums/commands';
 import { SfProject } from '@salesforce/core';
 import * as path from 'path';
-import * as shell from 'shelljs';
+import { execSync } from 'node:child_process';
 
 export const registerOpenAgentInOrgCommand = () => {
   return vscode.commands.registerCommand(Commands.openAgentInOrg, async () => {
@@ -20,16 +20,9 @@ export const registerOpenAgentInOrgCommand = () => {
       throw new Error('Agent must be selected');
     }
 
-    // const c = CoreExtensionService.getChannelService().showCommandWithTimestamp(`org:open:agent --name ${agentn}`);
+    const res = execSync(`sf org open agent --name "${agentName}"`);
 
-    // shell out to the CLI - maybe look at adding frontdoor/file/open logic to library?
-    // const execution = new CliCommandExecutor(new SfCommandBuilder().withArg('org:display').withJson().build(), {
-    //   cwd: projectPath
-    // }).execute();
-
-    const res = shell.exec(`sf org open agent --name ${agentName} 2>&1`, {});
-
-    if (res.at(0)) {
+    if (!res) {
       throw new Error('abc');
     }
   });
