@@ -6,12 +6,22 @@
  **/
 import * as vscode from 'vscode';
 import * as commands from './commands';
-
+import { sync } from 'cross-spawn';
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 // see "contributes" property in package.json for command list
 export async function activate(context: vscode.ExtensionContext) {
   try {
+    /**
+     * TODO:
+     * look at E4D CoreExtensionService to see if we need something similar
+     * decide if we want a hard CLI dependency, ensure it's installed, etc...
+     */
+
+    const versions = sync('sf', ['version', '--verbose', '--json']);
+    if (!versions.output.toString().includes('agent')) {
+      throw new Error('sf CLI + plugin-agent installed required');
+    }
     const disposables: vscode.Disposable[] = [];
 
     // Command Registration
