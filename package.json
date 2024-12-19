@@ -96,7 +96,7 @@
     "commandPalette": [
       {
         "command": "salesforcedx-vscode-agents.openAgentInOrg",
-        "when": "resourceDirname === 'bots'"
+        "when": "explorerResourceIsFolder && resourceFilename == bots"
       }
     ],
     "commands": [
@@ -104,15 +104,6 @@
         "command": "salesforcedx-vscode-agents.openAgentInOrg",
         "title": "%salesforcedx-vscode-agents.openAgentInOrg%"
       }
-    ],
-    "icons": {
-      "agent-open-in-org": {
-        "description": "%salesforcedx-vscode-agents.openAgentInOrg.description%",
-        "default": {
-          "fontPath": "resources/agent-icons.woff",
-          "fontCharacter": "\\E900"
-        }
-      }
-    }
+    ]
   }
 }
