@@ -96,7 +96,7 @@
     "commandPalette": [
       {
         "command": "salesforcedx-vscode-agents.openAgentInOrg",
-        "when": "explorerResourceIsFolder && resourceFilename == bots"
+        "when": "resourceExtname =~ /bot(\\w+|)-meta\\.xml/ || resourceExtname =~ /genAiPlanner-meta\\.xml/"
       }
     ],
     "commands": [
