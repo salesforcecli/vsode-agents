@@ -93,10 +93,18 @@
     "workspaceContains:sfdx-project.json"
   ],
   "contributes": {
+    "menus": {
+      "editor/context": [
+        {
+          "command": "salesforcedx-vscode-agents.openAgentInOrg",
+          "when": "resourceFilename =~ /.*\\.bot-meta\\.xml/ || resourceFilename =~ /.*\\.botVersion-meta\\.xml/ || resourceFilename =~ /.*\\.genAiPlanner-meta\\.xml/"
+        }
+      ]
+    },
     "commandPalette": [
       {
         "command": "salesforcedx-vscode-agents.openAgentInOrg",
-        "when": "resourceExtname =~ /bot(\\w+|)-meta\\.xml/ || resourceExtname =~ /genAiPlanner-meta\\.xml/"
+        "when": "resourceFilename =~ /.*\\.bot-meta\\.xml/ || resourceFilename =~ /.*\\.botVersion-meta\\.xml/ || resourceFilename =~ /.*\\.genAiPlanner-meta\\.xml/"
       }
     ],
     "commands": [

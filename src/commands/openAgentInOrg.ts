@@ -19,7 +19,9 @@ export const registerOpenAgentInOrgCommand = () => {
     if (!agentName) {
       throw new Error('No Agent selected');
     }
-
-    sync('sf', ['org', 'open', 'agent', '--name', agentName]);
+    const result = sync('sf', ['org', 'open', 'agent', '--name', agentName]);
+    if (result.status !== 0) {
+      vscode.window.showErrorMessage(`Unable to open agent: ${result.stderr.toString()}`);
+    }
   });
 };
