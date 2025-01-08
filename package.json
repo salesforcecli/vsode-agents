@@ -15,15 +15,20 @@
   "categories": [
     "Other"
   ],
-  "main": "./out/src/index.js",
+  "main": "./lib/extension.js",
   "dependencies": {
+    "@salesforce/core": "^8.8.0",
+    "cross-spawn": "^7.0.6",
+    "semver": "^7.6.3"
   },
   "devDependencies": {
-    "@salesforce/dev-config": "^4.3.1",
+    "@types/cross-spawn": "^6.0.6",
     "@commitlint/config-conventional": "^19.5.0",
+    "@salesforce/dev-config": "^4.3.1",
     "@tsconfig/node18": "^18.2.4",
     "@types/jest": "^29.5.12",
     "@types/node": "^18.11.9",
+    "@types/semver": "7.5.8",
     "@types/shelljs": "^0.8.15",
     "@types/vscode": "^1.94.0",
     "@typescript-eslint/eslint-plugin": "^8.2.0",
@@ -88,5 +93,17 @@
     "workspaceContains:sfdx-project.json"
   ],
   "contributes": {
+    "commandPalette": [
+      {
+        "command": "salesforcedx-vscode-agents.openAgentInOrg",
+        "when": "resourceExtname =~ /bot(\\w+|)-meta\\.xml/ || resourceExtname =~ /genAiPlanner-meta\\.xml/"
+      }
+    ],
+    "commands": [
+      {
+        "command": "salesforcedx-vscode-agents.openAgentInOrg",
+        "title": "%salesforcedx-vscode-agents.openAgentInOrg%"
+      }
+    ]
   }
 }

@@ -1,2 +1,4 @@
 {
+  "salesforcedx-vscode-agents.openAgentInOrg": "Open an Agent in the default Org",
+  "salesforcedx-vscode-agents.openAgentInOrg.description": "Open an Agent in the default Org Picture description"
 }
