@@ -4,22 +4,14 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
-import { readFileSync } from 'fs';
-import * as path from 'path';
 import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as xml from 'fast-xml-parser';
-import type { AgentTestDetailsResponse } from '@salesforce/agents';
 
 // Message
 // const LOADING_MESSAGE = 'loading';
 const NO_TESTS_MESSAGE = 'no tests found';
 const NO_TESTS_DESCRIPTION = 'no test description';
-const PASS_RESULT = 'pass';
-const FAIL_RESULT = 'fail';
-const SKIP_RESULT = 'skip';
-const TEST_RESULT_JSON_FILE = 'tests.json';
-const TEST_RUN_ID_FILE = 'testidfile';
 const AGENT_TESTS = 'AgentTests';
 
 const startPos = new vscode.Position(0, 0);
@@ -27,15 +19,6 @@ const endPos = new vscode.Position(0, 1);
 export const AGENT_GROUP_RANGE = new vscode.Range(startPos, endPos);
 
 const BASE_ID = 'sf.agent.test.view';
-/**
- * <AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
-    <description>second desc</description>
-    <name>seconddefinition</name>
-    <subjectType>AGENT</subjectType>
-    <subjectName>Demo agent</subjectName>
-    <testSetName>mysecondtest</testSetName>
-</AiEvaluationDefinition>
- */
 
 type AiEvaluationDefinition = {
   testSetName: string;
@@ -49,19 +32,18 @@ type AiEvaluationDefinition = {
 type AgentTestCase = {
   location: vscode.Location;
   name: string;
-  // inputs: { utterance: string };
+  utterance: string;
   // expectations: [{ expectation: { name: string; expectedValue: string } }];
 };
 
 const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> => {
   const aiTestDefs = await vscode.workspace.findFiles('**/*.aiEvaluationDefinition-meta.xml');
-  //from the aiTestDef files, parse the xml using fast-xml-parser, find the testSetName key/value
-  // read the file
+  //from the aiTestDef files, parse the xml using fast-xml-parser, find the testSetName that it points to
   const aggregator: AiEvaluationDefinition[] = [];
   const parser = new xml.XMLParser();
   await Promise.all(
-    aiTestDefs.map(async f => {
-      const testDefinition = parser.parse((await vscode.workspace.fs.readFile(f)).toString()) as {
+    aiTestDefs.map(async definition => {
+      const testDefinition = parser.parse((await vscode.workspace.fs.readFile(definition)).toString()) as {
         AiEvaluationDefinition: AiEvaluationDefinition;
       };
       const collector: AiEvaluationDefinition = {
@@ -70,25 +52,31 @@ const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> =
         name: testDefinition.AiEvaluationDefinition.name,
         subjectName: testDefinition.AiEvaluationDefinition.subjectName,
         description: testDefinition.AiEvaluationDefinition.description,
-        location: new vscode.Location(f, new vscode.Position(0, 0))
+        location: new vscode.Location(definition, new vscode.Position(0, 0))
       };
 
       //force-app/main/default/aiEvaluationTestsets/mysecondtest.aiEvaluationTestSet-meta.xml
+      // there's probably a better way to find this file than searching for it
       const aiTestSet = await vscode.workspace.findFiles(
         `**/${testDefinition.AiEvaluationDefinition.testSetName}.aiEvaluationTestSet-meta.xml`
       );
-      if (aiTestSet.length > 1) {
-        throw Error('too many files found// todo come back here for this messsage');
-      }
 
-      // read the aiTestDefs line by line, parsing for   <testCase> tags
       const content = (await vscode.workspace.fs.readFile(aiTestSet[0])).toString().split(EOL);
 
       for (let i = 0; i <= content.length - 1; i++) {
+        // read the aiTestDefs line by line, parsing for   <testCase> tags
+        let number;
+        let utterance;
         if (content[i].includes('<number>')) {
-          const number = parseInt(content[i].replace('<number>', '').replace('</number>', ''), 10);
+          number = parseInt(content[i].replace('<number>', '').replace('</number>', ''), 10);
+        }
+        if (content[i].includes('<utterance>')) {
+          utterance = content[i].replace('<utterance>', '').replace('</utterance>', '');
+        }
+        if (content && number) {
           collector.testCases.push({
             name: `Test Case: ${number}`,
+            utterance: utterance ?? 'unknown',
             location: new vscode.Location(aiTestSet[0], new vscode.Position(i, 0))
           });
         }
@@ -100,8 +88,7 @@ const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> =
 
   return aggregator;
 };
-// only one instance, this.children -> test files
-// this.children.children -> test methods
+
 export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNode> {
   private onDidChangeTestData: vscode.EventEmitter<TestNode | undefined> = new vscode.EventEmitter<
     TestNode | undefined
@@ -123,18 +110,6 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     this.getAllAgentTests();
   }
 
-  public getHead(): TestNode {
-    if (this.rootNode === null) {
-      return this.getAllAgentTests();
-    } else {
-      return this.rootNode;
-    }
-  }
-
-  public getId(): string {
-    return BASE_ID;
-  }
-
   public getChildren(element?: TestNode): TestNode[] {
     if (element) {
       return element.children;
@@ -142,22 +117,9 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
       if (this.rootNode && this.rootNode.children.length > 0) {
         return this.rootNode.children;
       } else {
-        let message = NO_TESTS_MESSAGE;
-        let description = NO_TESTS_DESCRIPTION;
-        // const languageClientStatus = languageClientUtils.getStatus();
-        // if (!languageClientStatus.isReady()) {
-        //   if (languageClientStatus.failedToInitialize()) {
-        //     void vscode.window.showInformationMessage(languageClientStatus.getStatusMessage());
-        //     return new Array<agentTestNode>();
-        //   }
-        //   message = LOADING_MESSAGE;
-        //   description = '';
-        // }
-        const emptyArray = new Array<AgentTestNode>();
-        const testToDisplay = new AgentTestNode(message, null);
-        testToDisplay.description = description;
-        emptyArray.push(testToDisplay);
-        return emptyArray;
+        const testToDisplay = new AgentTestNode(NO_TESTS_MESSAGE, null);
+        testToDisplay.description = NO_TESTS_DESCRIPTION;
+        return [testToDisplay];
       }
     }
   }
@@ -167,16 +129,10 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
       return element;
     } else {
       this.getAllAgentTests();
-      let message = NO_TESTS_MESSAGE;
-      let description = NO_TESTS_DESCRIPTION;
-      // if (!languageClientUtils.getStatus().isReady()) {
-      //   message = LOADING_MESSAGE;
-      //   description = '';
-      // }
       if (!(this.rootNode && this.rootNode.children.length > 0)) {
-        this.rootNode = new AgentTestNode(message, null);
-        const testToDisplay = new AgentTestNode(message, null);
-        testToDisplay.description = description;
+        this.rootNode = new AgentTestNode(NO_TESTS_MESSAGE, null);
+        const testToDisplay = new AgentTestNode(NO_TESTS_MESSAGE, null);
+        testToDisplay.description = NO_TESTS_DESCRIPTION;
         this.rootNode.children.push(testToDisplay);
       }
       return this.rootNode;
@@ -194,25 +150,7 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
   }
 
   public async collapseAll(): Promise<void> {
-    return vscode.commands.executeCommand(`workbench.actions.treeView.${this.getId()}.collapseAll`);
-  }
-
-  public async onResultFileCreate(agentTestPath: string, testResultFile: string) {
-    const testRunIdFile = path.join(agentTestPath, TEST_RUN_ID_FILE);
-    const testRunId = readFileSync(testRunIdFile).toString();
-    const testResultFilePath = path.join(
-      agentTestPath,
-      !testRunId ? TEST_RESULT_JSON_FILE : `test-result-${testRunId}.json`
-    );
-
-    if (testResultFile === testResultFilePath) {
-      await this.refresh();
-      this.updateTestResults(testResultFile);
-    }
-  }
-
-  public getTestClassName(uri: vscode.Uri): string | undefined {
-    return this.testIndex.get(uri.toString());
+    return vscode.commands.executeCommand(`workbench.actions.treeView.sf.agent.test.view.collapseAll`);
   }
 
   private createTestIndex(): void {
@@ -256,42 +194,6 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     }
     return this.rootNode;
   }
-
-  public updateTestResults(testResultFilePath: string) {
-    const testResultOutput = readFileSync(testResultFilePath, 'utf8');
-    const testResultContent = JSON.parse(testResultOutput) as AgentTestDetailsResponse;
-
-    this.updateTestsFromLibrary(testResultContent);
-    this.onDidChangeTestData.fire(undefined);
-  }
-
-  private updateTestsFromLibrary(testResult: AgentTestDetailsResponse) {
-    const groups = new Set<AgentTestGroupNode>();
-    for (const test of testResult.testSet.testCases) {
-      // const { name, namespacePrefix } = test.agentClass;
-      // const agentGroupName = namespacePrefix ? `${namespacePrefix}.${name}` : name;
-
-      const agentGroupNode = this.agentTestMap.get(test.number) as AgentTestGroupNode;
-
-      if (agentGroupNode) {
-        groups.add(agentGroupNode);
-      }
-
-      const agentTestNode = this.agentTestMap.get(test.number) as AgentTestNode;
-      if (agentTestNode) {
-        agentTestNode.outcome = test.expectationResults.every(entry => entry.result === 'Passed') ? 'PASS' : 'FAIL';
-        agentTestNode.updateOutcome();
-        // test.status - I think that's the API status (in-progress, etc,) not the tests' status
-        if (test.status.toString() === FAIL_RESULT) {
-          agentTestNode.errorMessage = test.expectationResults.map(e => e.errorMessage).join() || '';
-          agentTestNode.description = `${agentTestNode.stackTrace}\n${agentTestNode.errorMessage}`;
-        }
-      }
-    }
-    groups.forEach(group => {
-      group.updatePassFailLabel();
-    });
-  }
 }
 
 export abstract class TestNode extends vscode.TreeItem {
@@ -312,42 +214,6 @@ export abstract class TestNode extends vscode.TreeItem {
     };
   }
 
-  // public iconPath = {
-  //   light: iconHelpers.getIconPath(IconsEnum.LIGHT_BLUE_BUTTON),
-  //   dark: iconHelpers.getIconPath(IconsEnum.DARK_BLUE_BUTTON)
-  // };
-
-  // TODO: create a ticket to address this particular issue.
-
-  // @ts-ignore
-  get tooltip(): string {
-    return this.description;
-  }
-
-  public updateOutcome(outcome: string) {
-    // if (outcome === 'PASS') {
-    //   // Passed Test
-    //   this.iconPath = {
-    //     light: iconHelpers.getIconPath(IconsEnum.LIGHT_GREEN_BUTTON),
-    //     dark: iconHelpers.getIconPath(IconsEnum.DARK_GREEN_BUTTON)
-    //   };
-    // } else if (outcome === FAIL_RESULT) {
-    //   // Failed test
-    //   this.iconPath = {
-    //     light: iconHelpers.getIconPath(IconsEnum.LIGHT_RED_BUTTON),
-    //     dark: iconHelpers.getIconPath(IconsEnum.DARK_RED_BUTTON)
-    //   };
-    // } else if (outcome === SKIP_RESULT) {
-    //   // Skipped test
-    //   this.iconPath = {
-    //     light: iconHelpers.getIconPath(IconsEnum.LIGHT_ORANGE_BUTTON),
-    //     dark: iconHelpers.getIconPath(IconsEnum.DARK_ORANGE_BUTTON)
-    //   };
-    // }
-    // const nodeType = this.contextValue.split('_')[0];
-    // this.contextValue = `${nodeType}_${outcome}`;
-  }
-
   public abstract contextValue: string;
 }
 
@@ -361,37 +227,6 @@ export class AgentTestGroupNode extends TestNode {
   }
 
   public contextValue = 'agentTestGroup';
-
-  public updatePassFailLabel() {
-    this.passing = 0;
-    this.failing = 0;
-    this.skipping = 0;
-    this.children.forEach(child => {
-      if (child instanceof AgentTestNode) {
-        this.passing += child.outcome === PASS_RESULT ? 1 : 0;
-        this.failing += child.outcome === FAIL_RESULT ? 1 : 0;
-        this.skipping += child.outcome === SKIP_RESULT ? 1 : 0;
-      }
-    });
-
-    if (this.passing + this.failing + this.skipping === this.children.length) {
-      if (this.failing !== 0) {
-        this.updateOutcome(FAIL_RESULT);
-      } else {
-        this.updateOutcome(PASS_RESULT);
-      }
-    }
-  }
-
-  public updateOutcome(outcome: string) {
-    super.updateOutcome(outcome);
-    if (outcome === PASS_RESULT) {
-      this.children.forEach(child => {
-        // Update all the children as well
-        child.updateOutcome(outcome);
-      });
-    }
-  }
 }
 
 export class AgentTestNode extends TestNode {
@@ -401,13 +236,6 @@ export class AgentTestNode extends TestNode {
 
   constructor(label: string, location: vscode.Location | null) {
     super(label, vscode.TreeItemCollapsibleState.None, location);
-  }
-
-  public updateOutcome() {
-    super.updateOutcome(this.outcome);
-    if (this.outcome === PASS_RESULT) {
-      this.errorMessage = '';
-    }
   }
 
   public contextValue = 'agentTest';

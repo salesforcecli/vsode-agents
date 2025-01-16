@@ -44,7 +44,7 @@ const registerTestView = (): vscode.Disposable => {
   // Test View
   const testViewItems = new Array<vscode.Disposable>();
 
-  const testProvider = vscode.window.registerTreeDataProvider(testOutlineProvider.getId(), testOutlineProvider);
+  const testProvider = vscode.window.registerTreeDataProvider('sf.agent.test.view', testOutlineProvider);
   testViewItems.push(testProvider);
 
   // Run Test Button on Test View command
