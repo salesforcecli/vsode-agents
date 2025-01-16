@@ -17,15 +17,16 @@
   ],
   "main": "./lib/extension.js",
   "dependencies": {
+    "@salesforce/agents": "^0.5.11",
     "@salesforce/core": "^8.8.0",
     "cross-spawn": "^7.0.6",
     "semver": "^7.6.3"
   },
   "devDependencies": {
-    "@types/cross-spawn": "^6.0.6",
     "@commitlint/config-conventional": "^19.5.0",
     "@salesforce/dev-config": "^4.3.1",
     "@tsconfig/node18": "^18.2.4",
+    "@types/cross-spawn": "^6.0.6",
     "@types/jest": "^29.5.12",
     "@types/node": "^18.11.9",
     "@types/semver": "7.5.8",
@@ -93,7 +94,39 @@
     "workspaceContains:sfdx-project.json"
   ],
   "contributes": {
+    "views": {
+      "test": [
+        {
+          "id": "sf.agent.test.view",
+          "name": "%agent_test_view_name%",
+          "when": "sf:project_opened"
+        }
+      ]
+    },
     "menus": {
+      "view/title": [
+        {
+          "command": "sf.agent.test.view.run",
+          "when": "view == sf.agent.test.view",
+          "group": "navigation@1"
+        },
+        {
+          "command": "sf.agent.test.view.refresh",
+          "when": "view == sf.agent.test.view",
+          "group": "navigation@2"
+        },
+        {
+          "command": "sf.agent.test.view.collapseAll",
+          "when": "view == sf.agent.test.view",
+          "group": "navigation@3"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "sf.agent.test.view.goToDefinition",
+          "when": "view == sf.agent.test.view && viewItem =~ /(agentTest|agentTestGroup)(_Pass|_Skip|\\b)/"
+        }
+      ],
       "editor/context": [
         {
           "command": "salesforcedx-vscode-agents.openAgentInOrg",
@@ -103,11 +136,59 @@
     },
     "commandPalette": [
       {
+        "command": "sf.agent.test.view.goToDefinition",
+        "when": "false"
+      },
+      {
         "command": "salesforcedx-vscode-agents.openAgentInOrg",
         "when": "resourceFilename =~ /.*\\.bot-meta\\.xml/ || resourceFilename =~ /.*\\.botVersion-meta\\.xml/ || resourceFilename =~ /.*\\.genAiPlanner-meta\\.xml/"
+      },
+      {
+        "command": "sf.agent.test.view.run",
+        "when": "false"
+      },
+      {
+        "command": "sf.agent.test.view.refresh",
+        "when": "false"
+      },
+      {
+        "command": "sf.agent.test.view.collapseAll",
+        "when": "sf:project_opened"
       }
     ],
     "commands": [
+      {
+        "command": "sf.agent.test.view.goToDefinition",
+        "title": "%go_to_definition_title%",
+        "icon": {
+          "light": "resources/light/document/notRun.svg",
+          "dark": "resources/dark/document/notRun.svg"
+        }
+      },
+      {
+        "command": "sf.agent.test.view.refresh",
+        "title": "%refresh_test_title%",
+        "icon": {
+          "light": "resources/light/refresh.svg",
+          "dark": "resources/dark/refresh.svg"
+        }
+      },
+      {
+        "command": "sf.agent.test.view.collapseAll",
+        "title": "%collapse_tests_title%",
+        "icon": {
+          "light": "resources/light/collapse-all.svg",
+          "dark": "resources/dark/collapse-all.svg"
+        }
+      },
+      {
+        "command": "sf.agent.test.view.run",
+        "title": "%run_tests_title%",
+        "icon": {
+          "light": "resources/light/play-button.svg",
+          "dark": "resources/dark/play-button.svg"
+        }
+      },
       {
         "command": "salesforcedx-vscode-agents.openAgentInOrg",
         "title": "%salesforcedx-vscode-agents.openAgentInOrg%"

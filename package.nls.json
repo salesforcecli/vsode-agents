@@ -1,4 +1,5 @@
 {
   "salesforcedx-vscode-agents.openAgentInOrg": "SFDX: Open an Agent in the default Org",
-  "salesforcedx-vscode-agents.openAgentInOrg.description": "SFDX: Open an Agent in the default Org Picture description"
+  "salesforcedx-vscode-agents.openAgentInOrg.description": "SFDX: Open an Agent in the default Org Picture description",
+  "agent_test_view_name": "Agent Tests"
 }
