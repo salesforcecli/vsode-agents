@@ -32,7 +32,7 @@ export async function activate(context: vscode.ExtensionContext) {
     await getTestOutlineProvider().refresh();
     context.subscriptions.push(...disposables);
   } catch (err: unknown) {
-    throw new Error('Failed to initialize: ${(err as Error).message}');
+    throw new Error(`Failed to initialize: ${(err as Error).message}`);
   }
 }
 

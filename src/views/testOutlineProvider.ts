@@ -6,6 +6,7 @@
  */
 import { readFileSync } from 'fs';
 import * as path from 'path';
+import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as xml from 'fast-xml-parser';
 import type { AgentTestDetailsResponse } from '@salesforce/agents';
@@ -26,46 +27,96 @@ const endPos = new vscode.Position(0, 1);
 export const AGENT_GROUP_RANGE = new vscode.Range(startPos, endPos);
 
 const BASE_ID = 'sf.agent.test.view';
+/**
+ * <AiEvaluationDefinition xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>second desc</description>
+    <name>seconddefinition</name>
+    <subjectType>AGENT</subjectType>
+    <subjectName>Demo agent</subjectName>
+    <testSetName>mysecondtest</testSetName>
+</AiEvaluationDefinition>
+ */
+
+type AiEvaluationDefinition = {
+  testSetName: string;
+  name: string;
+  subjectName: string;
+  description: string;
+  testCases: AgentTestCase[];
+  location: vscode.Location;
+};
 
 type AgentTestCase = {
   location: vscode.Location;
-  number: number;
-  inputs: { utterance: string };
-  expectations: [{ expectation: { name: string; expectedValue: string } }];
+  name: string;
+  // inputs: { utterance: string };
+  // expectations: [{ expectation: { name: string; expectedValue: string } }];
 };
 
-const getAgentTests = async (): Promise<AgentTestCase[]> => {
+const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> => {
   const aiTestDefs = await vscode.workspace.findFiles('**/*.aiEvaluationDefinition-meta.xml');
   //from the aiTestDef files, parse the xml using fast-xml-parser, find the testSetName key/value
   // read the file
+  const aggregator: AiEvaluationDefinition[] = [];
   const parser = new xml.XMLParser();
-  const v = parser.parse((await vscode.workspace.fs.readFile(aiTestDefs[0])).toString()) as {
-    AiEvaluationDefinition: { testSetName: string };
-  };
+  await Promise.all(
+    aiTestDefs.map(async f => {
+      const testDefinition = parser.parse((await vscode.workspace.fs.readFile(f)).toString()) as {
+        AiEvaluationDefinition: AiEvaluationDefinition;
+      };
+      const collector: AiEvaluationDefinition = {
+        testCases: [],
+        testSetName: testDefinition.AiEvaluationDefinition.testSetName,
+        name: testDefinition.AiEvaluationDefinition.name,
+        subjectName: testDefinition.AiEvaluationDefinition.subjectName,
+        description: testDefinition.AiEvaluationDefinition.description,
+        location: new vscode.Location(f, new vscode.Position(0, 0))
+      };
 
-  // read the file, v, in the aiEvaluationTestset folder
-  const aiTestSet = await vscode.workspace.findFiles(
-    `**/${v.AiEvaluationDefinition.testSetName}.aiEvaluationTestset-meta.xml`
+      //force-app/main/default/aiEvaluationTestsets/mysecondtest.aiEvaluationTestSet-meta.xml
+      const aiTestSet = await vscode.workspace.findFiles(
+        `**/${testDefinition.AiEvaluationDefinition.testSetName}.aiEvaluationTestSet-meta.xml`
+      );
+      if (aiTestSet.length > 1) {
+        throw Error('too many files found// todo come back here for this messsage');
+      }
+
+      // read the aiTestDefs line by line, parsing for   <testCase> tags
+      const content = (await vscode.workspace.fs.readFile(aiTestSet[0])).toString().split(EOL);
+
+      for (let i = 0; i <= content.length - 1; i++) {
+        if (content[i].includes('<number>')) {
+          const number = parseInt(content[i].replace('<number>', '').replace('</number>', ''), 10);
+          collector.testCases.push({
+            name: `Test Case: ${number}`,
+            location: new vscode.Location(aiTestSet[0], new vscode.Position(i, 0))
+          });
+        }
+      }
+
+      aggregator.push(collector);
+    })
   );
 
-  return Promise.all(
-    aiTestSet.map(async f => parser.parse((await vscode.workspace.fs.readFile(f)).toString()) as AgentTestCase)
-  );
+  return aggregator;
 };
-
+// only one instance, this.children -> test files
+// this.children.children -> test methods
 export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNode> {
   private onDidChangeTestData: vscode.EventEmitter<TestNode | undefined> = new vscode.EventEmitter<
     TestNode | undefined
   >();
   public onDidChangeTreeData = this.onDidChangeTestData.event;
 
+  // matches test name 'geocodingservce' to test node (children)
   private agentTestMap: Map<string, TestNode> = new Map<string, TestNode>();
   private rootNode: TestNode | null;
   public testStrings: Set<string> = new Set<string>();
-  private agentTestInfo: AgentTestCase[] | null;
+  private agentTestInfo: AiEvaluationDefinition[] | null;
+  // matches filepath => parent ('geocodingservice.cls' => 'GeocodingService') example
   private testIndex: Map<string, string> = new Map<string, string>();
 
-  constructor(agentTestInfo: AgentTestCase[] | null) {
+  constructor(agentTestInfo: AiEvaluationDefinition[] | null) {
     this.rootNode = null;
     this.agentTestInfo = agentTestInfo;
     this.createTestIndex();
@@ -136,7 +187,7 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     this.rootNode = null; // Reset tests
     this.agentTestMap.clear();
     this.testStrings.clear();
-    this.agentTestInfo = await getAgentTests();
+    this.agentTestInfo = await parseAgentTestsFromProject();
     this.createTestIndex();
     this.getAllAgentTests();
     this.onDidChangeTestData.fire(undefined);
@@ -168,10 +219,8 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     this.testIndex.clear();
     if (this.agentTestInfo) {
       this.agentTestInfo.forEach(testMethod => {
-        this.testIndex.set(testMethod.location.uri.toString(), testMethod.number.toString());
+        this.testIndex.set(testMethod.location.uri.toString(), testMethod.name);
       });
-    } else {
-      //
     }
   }
 
@@ -182,22 +231,25 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     }
     this.rootNode.children = new Array<TestNode>();
     if (this.agentTestInfo) {
-      this.agentTestInfo.forEach(test => {
-        let agentGroup = this.agentTestMap.get(test.number.toString()) as AgentTestGroupNode;
+      this.agentTestInfo.forEach(definition => {
+        let agentGroup = this.agentTestMap.get(definition.name) as AgentTestGroupNode;
         if (!agentGroup) {
-          const groupLocation = new vscode.Location(test.location.uri, AGENT_GROUP_RANGE);
-          agentGroup = new AgentTestGroupNode(test.number, groupLocation);
-          this.agentTestMap.set(test.number.toString(), agentGroup);
+          const groupLocation = new vscode.Location(definition.location.uri, AGENT_GROUP_RANGE);
+          agentGroup = new AgentTestGroupNode(definition.name, groupLocation);
+          this.agentTestMap.set(definition.name, agentGroup);
         }
-        const agentTest = new AgentTestNode(test.number.toString(), test.location);
 
-        agentTest.name = agentGroup.label + '.' + agentTest.label;
-        this.agentTestMap.set(agentTest.name, agentTest);
-        agentGroup.children.push(agentTest);
-        if (this.rootNode && !(this.rootNode.children.indexOf(agentGroup) >= 0)) {
-          this.rootNode.children.push(agentGroup);
-        }
-        this.testStrings.add(agentGroup.name);
+        definition.testCases.forEach(test => {
+          const agentTest = new AgentTestNode(test.name, test.location);
+
+          agentTest.name = agentGroup.label + '.' + agentTest.label;
+          this.agentTestMap.set(agentTest.name, agentTest);
+          agentGroup.children.push(agentTest);
+          if (this.rootNode && !(this.rootNode.children.indexOf(agentGroup) >= 0)) {
+            this.rootNode.children.push(agentGroup);
+          }
+          this.testStrings.add(agentGroup.name);
+        });
       });
       // Sorting independently so we don't lose the order of the test methods per test class.
       this.rootNode.children.sort((a, b) => a.name.localeCompare(b.name));
