@@ -106,7 +106,7 @@
     "menus": {
       "view/title": [
         {
-          "command": "sf.agent.test.view.run",
+          "command": "sf.agent.test.view.runAll",
           "when": "view == sf.agent.test.view",
           "group": "navigation@1"
         },
@@ -122,6 +122,11 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "sf.agent.test.view.runTest",
+          "when": "view == sf.agent.test.view && viewItem =~ /agentTestGroup/",
+          "group": "inline"
+        },
         {
           "command": "sf.agent.test.view.goToDefinition",
           "when": "view == sf.agent.test.view && viewItem =~ /(agentTest|agentTestGroup)(_Pass|_Skip|\\b)/"
@@ -144,7 +149,11 @@
         "when": "resourceFilename =~ /.*\\.bot-meta\\.xml/ || resourceFilename =~ /.*\\.botVersion-meta\\.xml/ || resourceFilename =~ /.*\\.genAiPlanner-meta\\.xml/"
       },
       {
-        "command": "sf.agent.test.view.run",
+        "command": "sf.agent.test.view.runAll",
+        "when": "false"
+      },
+      {
+        "command": "sf.agent.test.view.runTest",
         "when": "false"
       },
       {
@@ -182,8 +191,16 @@
         }
       },
       {
-        "command": "sf.agent.test.view.run",
-        "title": "%run_tests_title%",
+        "command": "sf.agent.test.view.runAll",
+        "title": "%run_all_tests_title%",
+        "icon": {
+          "light": "resources/light/play-button.svg",
+          "dark": "resources/dark/play-button.svg"
+        }
+      },
+      {
+        "command": "sf.agent.test.view.runTest",
+        "title": "%run_test_title%",
         "icon": {
           "light": "resources/light/play-button.svg",
           "dark": "resources/dark/play-button.svg"

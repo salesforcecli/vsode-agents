@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import * as commands from './commands';
 import { sync } from 'cross-spawn';
 import { getTestOutlineProvider, TestNode } from './views/testOutlineProvider';
-import { AgentTestRunner, TestRunType } from './views/testRunner';
+import { AgentTestRunner } from './views/testRunner';
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 // see "contributes" property in package.json for command list
@@ -38,43 +38,42 @@ export async function activate(context: vscode.ExtensionContext) {
 
 const registerTestView = (): vscode.Disposable => {
   const testOutlineProvider = getTestOutlineProvider();
-  // Create TestRunner
-  const testRunner = new AgentTestRunner(testOutlineProvider);
+  const testRunner = new AgentTestRunner();
 
-  // Test View
   const testViewItems = new Array<vscode.Disposable>();
 
   const testProvider = vscode.window.registerTreeDataProvider('sf.agent.test.view', testOutlineProvider);
   testViewItems.push(testProvider);
 
-  // Run Test Button on Test View command
-  testViewItems.push(vscode.commands.registerCommand('sf.agent.test.view.run', () => testRunner.runAllAgentTests()));
-  // Show Error Message command
   testViewItems.push(
     vscode.commands.registerCommand('sf.agent.test.view.showError', (test: TestNode) =>
       testRunner.showErrorMessage(test)
     )
   );
-  // Show Definition command
+
   testViewItems.push(
     vscode.commands.registerCommand('sf.agent.test.view.goToDefinition', (test: TestNode) =>
       testRunner.showErrorMessage(test)
     )
   );
-  // Run Class Tests command
+
   testViewItems.push(
-    vscode.commands.registerCommand('sf.agent.test.view.runClassTests', (test: TestNode) =>
-      testRunner.runAgentTests([test.name], TestRunType.All)
+    vscode.commands.registerCommand('sf.agent.test.view.runTest', (test: TestNode) =>
+      testRunner.runAgentTest(test.name)
     )
   );
 
-  // Refresh Test View command
+  testViewItems.push(
+    // todo: expand to run all tests
+    vscode.commands.registerCommand('sf.agent.test.view.runAll', (test: TestNode) => testRunner.runAgentTest(test.name))
+  );
+
   testViewItems.push(
     vscode.commands.registerCommand('sf.agent.test.view.refresh', () => {
       return testOutlineProvider.refresh();
     })
   );
-  // Collapse All Apex Tests command
+
   testViewItems.push(
     vscode.commands.registerCommand('sf.agent.test.view.collapseAll', () => testOutlineProvider.collapseAll())
   );

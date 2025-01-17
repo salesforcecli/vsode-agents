@@ -8,8 +8,6 @@ import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as xml from 'fast-xml-parser';
 
-// Message
-// const LOADING_MESSAGE = 'loading';
 const NO_TESTS_MESSAGE = 'no tests found';
 const NO_TESTS_DESCRIPTION = 'no test description';
 const AGENT_TESTS = 'AgentTests';
@@ -31,8 +29,8 @@ type AiEvaluationDefinition = {
 
 type AgentTestCase = {
   location: vscode.Location;
-  name: string;
-  utterance: string;
+  number: string;
+  // utterance: string;
   // expectations: [{ expectation: { name: string; expectedValue: string } }];
 };
 
@@ -65,18 +63,9 @@ const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> =
 
       for (let i = 0; i <= content.length - 1; i++) {
         // read the aiTestDefs line by line, parsing for   <testCase> tags
-        let number;
-        let utterance;
         if (content[i].includes('<number>')) {
-          number = parseInt(content[i].replace('<number>', '').replace('</number>', ''), 10);
-        }
-        if (content[i].includes('<utterance>')) {
-          utterance = content[i].replace('<utterance>', '').replace('</utterance>', '');
-        }
-        if (content && number) {
           collector.testCases.push({
-            name: `Test Case: ${number}`,
-            utterance: utterance ?? 'unknown',
+            number: content[i].replace('<number>', '').replace('</number>', ''),
             location: new vscode.Location(aiTestSet[0], new vscode.Position(i, 0))
           });
         }
@@ -98,15 +87,11 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
   // matches test name 'geocodingservce' to test node (children)
   private agentTestMap: Map<string, TestNode> = new Map<string, TestNode>();
   private rootNode: TestNode | null;
-  public testStrings: Set<string> = new Set<string>();
   private agentTestInfo: AiEvaluationDefinition[] | null;
-  // matches filepath => parent ('geocodingservice.cls' => 'GeocodingService') example
-  private testIndex: Map<string, string> = new Map<string, string>();
 
   constructor(agentTestInfo: AiEvaluationDefinition[] | null) {
     this.rootNode = null;
     this.agentTestInfo = agentTestInfo;
-    this.createTestIndex();
     this.getAllAgentTests();
   }
 
@@ -142,24 +127,13 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
   public async refresh(): Promise<void> {
     this.rootNode = null; // Reset tests
     this.agentTestMap.clear();
-    this.testStrings.clear();
     this.agentTestInfo = await parseAgentTestsFromProject();
-    this.createTestIndex();
     this.getAllAgentTests();
     this.onDidChangeTestData.fire(undefined);
   }
 
   public async collapseAll(): Promise<void> {
     return vscode.commands.executeCommand(`workbench.actions.treeView.sf.agent.test.view.collapseAll`);
-  }
-
-  private createTestIndex(): void {
-    this.testIndex.clear();
-    if (this.agentTestInfo) {
-      this.agentTestInfo.forEach(testMethod => {
-        this.testIndex.set(testMethod.location.uri.toString(), testMethod.name);
-      });
-    }
   }
 
   private getAllAgentTests(): TestNode {
@@ -178,15 +152,13 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
         }
 
         definition.testCases.forEach(test => {
-          const agentTest = new AgentTestNode(test.name, test.location);
+          const agentTest = new AgentTestNode(`Test Case:${test.number}`, test.location);
 
-          agentTest.name = agentGroup.label + '.' + agentTest.label;
           this.agentTestMap.set(agentTest.name, agentTest);
           agentGroup.children.push(agentTest);
           if (this.rootNode && !(this.rootNode.children.indexOf(agentGroup) >= 0)) {
             this.rootNode.children.push(agentGroup);
           }
-          this.testStrings.add(agentGroup.name);
         });
       });
       // Sorting independently so we don't lose the order of the test methods per test class.
@@ -198,14 +170,12 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
 
 export abstract class TestNode extends vscode.TreeItem {
   public children = new Array<TestNode>();
-  public description: string;
   public name: string;
   public location: vscode.Location | null;
 
   constructor(label: string, collapsibleState: vscode.TreeItemCollapsibleState, location: vscode.Location | null) {
     super(label, collapsibleState);
     this.location = location;
-    this.description = label;
     this.name = label;
     this.command = {
       command: `${BASE_ID}.showError`,
