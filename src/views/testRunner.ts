@@ -7,7 +7,7 @@
 
 import * as events from 'events';
 import * as vscode from 'vscode';
-import { AgentTestGroupNode, AgentTestNode, TestNode } from './testOutlineProvider';
+import type { TestNode } from './testOutlineProvider';
 import { AgentTester } from '@salesforce/agents';
 import { ConfigAggregator, Org } from '@salesforce/core';
 
@@ -18,33 +18,10 @@ export class AgentTestRunner {
     this.eventsEmitter.on('sf:update_selection', this.updateSelection);
   }
 
-  public showErrorMessage(test: TestNode) {
-    let testNode = test;
-    let position: vscode.Range | number = test.location!.range;
-    if (testNode instanceof AgentTestGroupNode) {
-      if (test.contextValue === 'agentTestGroup_Fail') {
-        const failedTest = test.children.find(testCase => testCase.contextValue === 'agentTest_Fail');
-        if (failedTest) {
-          testNode = failedTest;
-        }
-      }
-    }
-    if (testNode instanceof AgentTestNode) {
-      const errorMessage = testNode.errorMessage;
-      if (errorMessage && errorMessage !== '') {
-        const stackTrace = testNode.stackTrace;
-        position = parseInt(stackTrace.substring(stackTrace.indexOf('line') + 4, stackTrace.indexOf(',')), 10) - 1; // Remove one because vscode location is zero based
-        // channelService.appendLine('-----------------------------------------');
-        // channelService.appendLine(stackTrace);
-        // channelService.appendLine(errorMessage);
-        // channelService.appendLine('-----------------------------------------');
-        // channelService.showChannelOutput();
-      }
-    }
-
-    if (testNode.location) {
-      vscode.window.showTextDocument(testNode.location.uri).then(() => {
-        this.eventsEmitter.emit('sf:update_selection', position);
+  public goToTest(test: TestNode) {
+    if (test.location) {
+      vscode.window.showTextDocument(test.location.uri).then(() => {
+        this.eventsEmitter.emit('sf:update_selection', test.location?.range);
       });
     }
   }

@@ -16,8 +16,6 @@ const startPos = new vscode.Position(0, 0);
 const endPos = new vscode.Position(0, 1);
 export const AGENT_GROUP_RANGE = new vscode.Range(startPos, endPos);
 
-const BASE_ID = 'sf.agent.test.view';
-
 type AiEvaluationDefinition = {
   testSetName: string;
   name: string;
@@ -178,7 +176,7 @@ export abstract class TestNode extends vscode.TreeItem {
     this.location = location;
     this.name = label;
     this.command = {
-      command: `${BASE_ID}.showError`,
+      command: `sf.agent.test.view.goToDefinition`,
       title: 'SHOW ERROR',
       arguments: [this]
     };

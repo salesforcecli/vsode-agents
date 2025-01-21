@@ -46,15 +46,7 @@ const registerTestView = (): vscode.Disposable => {
   testViewItems.push(testProvider);
 
   testViewItems.push(
-    vscode.commands.registerCommand('sf.agent.test.view.showError', (test: TestNode) =>
-      testRunner.showErrorMessage(test)
-    )
-  );
-
-  testViewItems.push(
-    vscode.commands.registerCommand('sf.agent.test.view.goToDefinition', (test: TestNode) =>
-      testRunner.showErrorMessage(test)
-    )
+    vscode.commands.registerCommand('sf.agent.test.view.goToDefinition', (test: TestNode) => testRunner.goToTest(test))
   );
 
   testViewItems.push(
@@ -63,10 +55,10 @@ const registerTestView = (): vscode.Disposable => {
     )
   );
 
-  testViewItems.push(
-    // todo: expand to run all tests
-    vscode.commands.registerCommand('sf.agent.test.view.runAll', (test: TestNode) => testRunner.runAgentTest(test.name))
-  );
+  // testViewItems.push(
+  //   // todo: expand to run all tests
+  //   vscode.commands.registerCommand('sf.agent.test.view.runAll', (test: TestNode) => testRunner.runAgentTest(test.name))
+  // );
 
   testViewItems.push(
     vscode.commands.registerCommand('sf.agent.test.view.refresh', () => {

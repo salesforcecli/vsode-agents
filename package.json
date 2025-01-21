@@ -107,7 +107,7 @@
       "view/title": [
         {
           "command": "sf.agent.test.view.runAll",
-          "when": "view == sf.agent.test.view",
+          "when": "never && view == sf.agent.test.view",
           "group": "navigation@1"
         },
         {
