@@ -7,13 +7,17 @@
 
 import * as events from 'events';
 import * as vscode from 'vscode';
-import type { TestNode } from './testOutlineProvider';
+import { AgentTestOutlineProvider, type AgentTestGroupNode, type TestNode } from './testOutlineProvider';
 import { AgentTester } from '@salesforce/agents';
 import { ConfigAggregator, Org } from '@salesforce/core';
+import { Duration } from '@salesforce/kit';
 
 export class AgentTestRunner {
   private eventsEmitter: events.EventEmitter;
-  constructor(eventsEmitter?: events.EventEmitter) {
+  constructor(
+    private testOutline: AgentTestOutlineProvider,
+    eventsEmitter?: events.EventEmitter
+  ) {
     this.eventsEmitter = eventsEmitter || new events.EventEmitter();
     this.eventsEmitter.on('sf:update_selection', this.updateSelection);
   }
@@ -41,11 +45,35 @@ export class AgentTestRunner {
     }
   }
 
-  public async runAgentTest(definition: string) {
-    const ca = await ConfigAggregator.create();
-    const org = await Org.create({ aliasOrUsername: ca.getPropertyValue<string>('target-org') ?? 'undefined' });
+  public async runAgentTest(test: AgentTestGroupNode) {
+    try {
+      const configAggregator = await ConfigAggregator.create();
 
-    const at = new AgentTester(org.getConnection());
-    at.start(definition);
+      const org = await Org.create({
+        aliasOrUsername: configAggregator.getPropertyValue<string>('target-org') ?? 'undefined'
+      });
+      // set the mock directory here - needs to be removed;
+      process.env.SF_MOCK_DIR = '/Users/william.ruemmele/projects/oss/agents/test/mocks';
+
+      const tester = new AgentTester(org.getConnection());
+      const response = await tester.start(test.name);
+      await vscode.window.showInformationMessage(`Test ${test.name} ran with status: ${response.status}`);
+
+      const result = await tester.poll(response.aiEvaluationId, { timeout: Duration.minutes(100) });
+      this.testOutline.getChild(test.name)?.updateOutcome(result.status);
+
+      if (result.status === 'ERROR') {
+        vscode.window.showErrorMessage(`Test ${test.name} failed with error: ${result.errorMessage}`);
+      }
+      if (result.status === 'COMPLETED') {
+        vscode.window.showInformationMessage(`Test ${test.name} completed successfully`);
+      }
+    } catch (e) {
+      this.testOutline.getChild(test.name)?.updateOutcome('ERROR');
+      vscode.window.showErrorMessage(`Error running test: ${(e as Error).message}`);
+    } finally {
+      // will update icons
+      this.testOutline.refreshView();
+    }
   }
 }

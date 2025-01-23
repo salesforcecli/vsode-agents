@@ -38,7 +38,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
 const registerTestView = (): vscode.Disposable => {
   const testOutlineProvider = getTestOutlineProvider();
-  const testRunner = new AgentTestRunner();
+  const testRunner = new AgentTestRunner(testOutlineProvider);
 
   const testViewItems = new Array<vscode.Disposable>();
 
@@ -51,7 +51,7 @@ const registerTestView = (): vscode.Disposable => {
 
   testViewItems.push(
     vscode.commands.registerCommand('sf.agent.test.view.runTest', (test: TestNode) =>
-      testRunner.runAgentTest(test.name)
+      testRunner.runAgentTest(test)
     )
   );
 

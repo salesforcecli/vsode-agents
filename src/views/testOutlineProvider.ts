@@ -7,6 +7,7 @@
 import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as xml from 'fast-xml-parser';
+import { TestStatus } from '@salesforce/agents';
 
 const NO_TESTS_MESSAGE = 'no tests found';
 const NO_TESTS_DESCRIPTION = 'no test description';
@@ -28,8 +29,6 @@ type AiEvaluationDefinition = {
 type AgentTestCase = {
   location: vscode.Location;
   number: string;
-  // utterance: string;
-  // expectations: [{ expectation: { name: string; expectedValue: string } }];
 };
 
 const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> => {
@@ -63,8 +62,8 @@ const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> =
         // read the aiTestDefs line by line, parsing for   <testCase> tags
         if (content[i].includes('<number>')) {
           collector.testCases.push({
-            number: content[i].replace('<number>', '').replace('</number>', ''),
-            location: new vscode.Location(aiTestSet[0], new vscode.Position(i, 0))
+            number: content[i].replace('<number>', '').replace('</number>', '').trim(),
+            location: new vscode.Location(aiTestSet[0], new vscode.Position(i, 5))
           });
         }
       }
@@ -77,20 +76,30 @@ const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> =
 };
 
 export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNode> {
+  // communicates to VSC that the data has changed and needs to be rerendered - these are vitally important
   private onDidChangeTestData: vscode.EventEmitter<TestNode | undefined> = new vscode.EventEmitter<
     TestNode | undefined
   >();
   public onDidChangeTreeData = this.onDidChangeTestData.event;
 
   // matches test name 'geocodingservce' to test node (children)
+  // TODO: clean up agentTestMap/agentTestInfo relationships/types
   private agentTestMap: Map<string, TestNode> = new Map<string, TestNode>();
   private rootNode: TestNode | null;
-  private agentTestInfo: AiEvaluationDefinition[] | null;
+  private agentTestInfo: AiEvaluationDefinition[] = [];
 
-  constructor(agentTestInfo: AiEvaluationDefinition[] | null) {
+  constructor(agentTestInfo: AiEvaluationDefinition[] = []) {
     this.rootNode = null;
     this.agentTestInfo = agentTestInfo;
     this.getAllAgentTests();
+  }
+
+  public getChild(key: string): TestNode | undefined {
+    return this.agentTestMap.get(key);
+  }
+
+  public refreshView(): void {
+    this.onDidChangeTestData.fire(undefined);
   }
 
   public getChildren(element?: TestNode): TestNode[] {
@@ -100,7 +109,7 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
       if (this.rootNode && this.rootNode.children.length > 0) {
         return this.rootNode.children;
       } else {
-        const testToDisplay = new AgentTestNode(NO_TESTS_MESSAGE, null);
+        const testToDisplay = new AgentTestNode(NO_TESTS_MESSAGE);
         testToDisplay.description = NO_TESTS_DESCRIPTION;
         return [testToDisplay];
       }
@@ -113,8 +122,8 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     } else {
       this.getAllAgentTests();
       if (!(this.rootNode && this.rootNode.children.length > 0)) {
-        this.rootNode = new AgentTestNode(NO_TESTS_MESSAGE, null);
-        const testToDisplay = new AgentTestNode(NO_TESTS_MESSAGE, null);
+        this.rootNode = new AgentTestNode(NO_TESTS_MESSAGE);
+        const testToDisplay = new AgentTestNode(NO_TESTS_MESSAGE);
         testToDisplay.description = NO_TESTS_DESCRIPTION;
         this.rootNode.children.push(testToDisplay);
       }
@@ -127,7 +136,7 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     this.agentTestMap.clear();
     this.agentTestInfo = await parseAgentTestsFromProject();
     this.getAllAgentTests();
-    this.onDidChangeTestData.fire(undefined);
+    this.refreshView();
   }
 
   public async collapseAll(): Promise<void> {
@@ -137,7 +146,7 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
   private getAllAgentTests(): TestNode {
     if (this.rootNode === null) {
       // Starting Out
-      this.rootNode = new AgentTestGroupNode(AGENT_TESTS, null);
+      this.rootNode = new AgentTestGroupNode(AGENT_TESTS);
     }
     this.rootNode.children = new Array<TestNode>();
     if (this.agentTestInfo) {
@@ -150,7 +159,7 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
         }
 
         definition.testCases.forEach(test => {
-          const agentTest = new AgentTestNode(`Test Case:${test.number}`, test.location);
+          const agentTest = new AgentTestNode(`Test Case: ${test.number}`, test.location);
 
           this.agentTestMap.set(agentTest.name, agentTest);
           agentGroup.children.push(agentTest);
@@ -168,13 +177,21 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
 
 export abstract class TestNode extends vscode.TreeItem {
   public children = new Array<TestNode>();
-  public name: string;
-  public location: vscode.Location | null;
+  protected resourceDir = vscode.Uri.joinPath(
+    vscode.extensions.getExtension('salesforce.salesforcedx-vscode-agents')!.extensionUri,
+    'resources'
+  );
+  public iconPath = {
+    light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testNotRun.svg'),
+    dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testNotRun.svg')
+  };
 
-  constructor(label: string, collapsibleState: vscode.TreeItemCollapsibleState, location: vscode.Location | null) {
-    super(label, collapsibleState);
-    this.location = location;
-    this.name = label;
+  protected constructor(
+    public name: string,
+    collapsibleState: vscode.TreeItemCollapsibleState,
+    public location: vscode.Location | null
+  ) {
+    super(name, collapsibleState);
     this.command = {
       command: `sf.agent.test.view.goToDefinition`,
       title: 'SHOW ERROR',
@@ -183,27 +200,55 @@ export abstract class TestNode extends vscode.TreeItem {
   }
 
   public abstract contextValue: string;
+
+  public updateOutcome(outcome: TestStatus): void {
+    switch (outcome) {
+      case 'COMPLETED': // Passed Test
+        this.iconPath = {
+          light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testPass.svg'),
+          dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testPass.svg')
+        };
+        break;
+      case 'ERROR': // Failed test
+        this.iconPath = {
+          light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testFail.svg'),
+          dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testFail.svg')
+        };
+        break;
+      case 'NEW':
+      case "IN_PROGRESS":
+        this.iconPath = {
+          light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testInProgress.svg'),
+          dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testInProgress.svg')
+        };
+        break;
+    }
+  }
 }
 
 export class AgentTestGroupNode extends TestNode {
-  public passing: number = 0;
-  public failing: number = 0;
-  public skipping: number = 0;
-
-  constructor(label: number | string, location: vscode.Location | null) {
-    super(typeof label === 'string' ? label : label.toString(), vscode.TreeItemCollapsibleState.Expanded, location);
+  constructor(label: number | string, location?: vscode.Location) {
+    super(
+      typeof label === 'string' ? label : label.toString(),
+      vscode.TreeItemCollapsibleState.Expanded,
+      location ?? null
+    );
   }
 
   public contextValue = 'agentTestGroup';
+
+  public updateOutcome(outcome: TestStatus): void {
+    super.updateOutcome(outcome);
+    this.children.forEach(child => {
+      child.updateOutcome(outcome);
+    });
+  }
 }
 
 export class AgentTestNode extends TestNode {
-  public errorMessage: string = '';
-  public stackTrace: string = '';
-  public outcome = 'Not Run';
 
-  constructor(label: string, location: vscode.Location | null) {
-    super(label, vscode.TreeItemCollapsibleState.None, location);
+  constructor(label: string, location?: vscode.Location) {
+    super(label, vscode.TreeItemCollapsibleState.None, location ?? null);
   }
 
   public contextValue = 'agentTest';
@@ -213,7 +258,7 @@ let testOutlineProviderInst: AgentTestOutlineProvider;
 
 export const getTestOutlineProvider = () => {
   if (!testOutlineProviderInst) {
-    testOutlineProviderInst = new AgentTestOutlineProvider(null);
+    testOutlineProviderInst = new AgentTestOutlineProvider();
   }
   return testOutlineProviderInst;
 };
