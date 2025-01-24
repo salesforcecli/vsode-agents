@@ -7,29 +7,14 @@
 import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as xml from 'fast-xml-parser';
-import { TestStatus } from '@salesforce/agents';
+import { Commands } from '../enums/commands';
+import {AgentTestGroupNode, AgentTestNode, AiEvaluationDefinition, TestNode} from "../types";
 
 const NO_TESTS_MESSAGE = 'no tests found';
 const NO_TESTS_DESCRIPTION = 'no test description';
 const AGENT_TESTS = 'AgentTests';
 
-const startPos = new vscode.Position(0, 0);
-const endPos = new vscode.Position(0, 1);
-export const AGENT_GROUP_RANGE = new vscode.Range(startPos, endPos);
-
-type AiEvaluationDefinition = {
-  testSetName: string;
-  name: string;
-  subjectName: string;
-  description: string;
-  testCases: AgentTestCase[];
-  location: vscode.Location;
-};
-
-type AgentTestCase = {
-  location: vscode.Location;
-  number: string;
-};
+export const AGENT_GROUP_RANGE = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 1));
 
 const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> => {
   const aiTestDefs = await vscode.workspace.findFiles('**/*.aiEvaluationDefinition-meta.xml');
@@ -140,7 +125,7 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
   }
 
   public async collapseAll(): Promise<void> {
-    return vscode.commands.executeCommand(`workbench.actions.treeView.sf.agent.test.view.collapseAll`);
+    return vscode.commands.executeCommand(`workbench.actions.treeView.${Commands.collapseAll}`);
   }
 
   private getAllAgentTests(): TestNode {
@@ -173,85 +158,6 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     }
     return this.rootNode;
   }
-}
-
-export abstract class TestNode extends vscode.TreeItem {
-  public children = new Array<TestNode>();
-  protected resourceDir = vscode.Uri.joinPath(
-    vscode.extensions.getExtension('salesforce.salesforcedx-vscode-agents')!.extensionUri,
-    'resources'
-  );
-  public iconPath = {
-    light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testNotRun.svg'),
-    dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testNotRun.svg')
-  };
-
-  protected constructor(
-    public name: string,
-    collapsibleState: vscode.TreeItemCollapsibleState,
-    public location: vscode.Location | null
-  ) {
-    super(name, collapsibleState);
-    this.command = {
-      command: `sf.agent.test.view.goToDefinition`,
-      title: 'SHOW ERROR',
-      arguments: [this]
-    };
-  }
-
-  public abstract contextValue: string;
-
-  public updateOutcome(outcome: TestStatus): void {
-    switch (outcome) {
-      case 'COMPLETED': // Passed Test
-        this.iconPath = {
-          light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testPass.svg'),
-          dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testPass.svg')
-        };
-        break;
-      case 'ERROR': // Failed test
-        this.iconPath = {
-          light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testFail.svg'),
-          dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testFail.svg')
-        };
-        break;
-      case 'NEW':
-      case "IN_PROGRESS":
-        this.iconPath = {
-          light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testInProgress.svg'),
-          dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testInProgress.svg')
-        };
-        break;
-    }
-  }
-}
-
-export class AgentTestGroupNode extends TestNode {
-  constructor(label: number | string, location?: vscode.Location) {
-    super(
-      typeof label === 'string' ? label : label.toString(),
-      vscode.TreeItemCollapsibleState.Expanded,
-      location ?? null
-    );
-  }
-
-  public contextValue = 'agentTestGroup';
-
-  public updateOutcome(outcome: TestStatus): void {
-    super.updateOutcome(outcome);
-    this.children.forEach(child => {
-      child.updateOutcome(outcome);
-    });
-  }
-}
-
-export class AgentTestNode extends TestNode {
-
-  constructor(label: string, location?: vscode.Location) {
-    super(label, vscode.TreeItemCollapsibleState.None, location ?? null);
-  }
-
-  public contextValue = 'agentTest';
 }
 
 let testOutlineProviderInst: AgentTestOutlineProvider;

@@ -7,10 +7,11 @@
 
 import * as events from 'events';
 import * as vscode from 'vscode';
-import { AgentTestOutlineProvider, type AgentTestGroupNode, type TestNode } from './testOutlineProvider';
+import { AgentTestOutlineProvider } from './testOutlineProvider';
 import { AgentTester } from '@salesforce/agents';
 import { ConfigAggregator, Org } from '@salesforce/core';
 import { Duration } from '@salesforce/kit';
+import type {AgentTestGroupNode, TestNode} from "../types";
 
 export class AgentTestRunner {
   private eventsEmitter: events.EventEmitter;
@@ -52,12 +53,11 @@ export class AgentTestRunner {
       const org = await Org.create({
         aliasOrUsername: configAggregator.getPropertyValue<string>('target-org') ?? 'undefined'
       });
-      // set the mock directory here - needs to be removed;
-      process.env.SF_MOCK_DIR = '/Users/william.ruemmele/projects/oss/agents/test/mocks';
 
       const tester = new AgentTester(org.getConnection());
-      const response = await tester.start(test.name);
-      await vscode.window.showInformationMessage(`Test ${test.name} ran with status: ${response.status}`);
+      const response = await tester.start(test.name, 'name');
+      // begin in-progress
+      this.testOutline.getChild(test.name)?.updateOutcome(response.status);
 
       const result = await tester.poll(response.aiEvaluationId, { timeout: Duration.minutes(100) });
       this.testOutline.getChild(test.name)?.updateOutcome(result.status);
@@ -71,9 +71,6 @@ export class AgentTestRunner {
     } catch (e) {
       this.testOutline.getChild(test.name)?.updateOutcome('ERROR');
       vscode.window.showErrorMessage(`Error running test: ${(e as Error).message}`);
-    } finally {
-      // will update icons
-      this.testOutline.refreshView();
     }
   }
 }

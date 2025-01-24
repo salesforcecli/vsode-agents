@@ -170,8 +170,8 @@
         "command": "sf.agent.test.view.goToDefinition",
         "title": "%go_to_definition_title%",
         "icon": {
-          "light": "resources/light/document/notRun.svg",
-          "dark": "resources/dark/document/notRun.svg"
+          "light": "resources/light/notRun.svg",
+          "dark": "resources/dark/notRun.svg"
         }
       },
       {

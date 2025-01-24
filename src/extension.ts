@@ -7,8 +7,10 @@
 import * as vscode from 'vscode';
 import * as commands from './commands';
 import { sync } from 'cross-spawn';
-import { getTestOutlineProvider, TestNode } from './views/testOutlineProvider';
+import { getTestOutlineProvider } from './views/testOutlineProvider';
 import { AgentTestRunner } from './views/testRunner';
+import { Commands } from './enums/commands';
+import type {TestNode} from "./types";
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 // see "contributes" property in package.json for command list
@@ -46,13 +48,11 @@ const registerTestView = (): vscode.Disposable => {
   testViewItems.push(testProvider);
 
   testViewItems.push(
-    vscode.commands.registerCommand('sf.agent.test.view.goToDefinition', (test: TestNode) => testRunner.goToTest(test))
+    vscode.commands.registerCommand(Commands.goToDefinition, (test: TestNode) => testRunner.goToTest(test))
   );
 
   testViewItems.push(
-    vscode.commands.registerCommand('sf.agent.test.view.runTest', (test: TestNode) =>
-      testRunner.runAgentTest(test)
-    )
+    vscode.commands.registerCommand(Commands.runTest, (test: TestNode) => testRunner.runAgentTest(test))
   );
 
   // testViewItems.push(
@@ -61,14 +61,12 @@ const registerTestView = (): vscode.Disposable => {
   // );
 
   testViewItems.push(
-    vscode.commands.registerCommand('sf.agent.test.view.refresh', () => {
+    vscode.commands.registerCommand(Commands.refreshTestView, () => {
       return testOutlineProvider.refresh();
     })
   );
 
-  testViewItems.push(
-    vscode.commands.registerCommand('sf.agent.test.view.collapseAll', () => testOutlineProvider.collapseAll())
-  );
+  testViewItems.push(vscode.commands.registerCommand(Commands.collapseAll, () => testOutlineProvider.collapseAll()));
 
   return vscode.Disposable.from(...testViewItems);
 };
