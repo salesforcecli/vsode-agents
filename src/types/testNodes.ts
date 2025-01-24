@@ -63,9 +63,9 @@ export abstract class TestNode extends vscode.TreeItem {
  * has children AgentTestNode for individual test cases
  */
 export class AgentTestGroupNode extends TestNode {
-    constructor(label: number | string, location?: vscode.Location) {
+    constructor(label:  string, location?: vscode.Location) {
         super(
-            typeof label === 'string' ? label : label.toString(),
+            label,
             vscode.TreeItemCollapsibleState.Expanded,
             location ?? null
         );

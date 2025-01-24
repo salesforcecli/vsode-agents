@@ -8,32 +8,26 @@ import { EOL } from 'os';
 import * as vscode from 'vscode';
 import * as xml from 'fast-xml-parser';
 import { Commands } from '../enums/commands';
-import {AgentTestGroupNode, AgentTestNode, AiEvaluationDefinition, TestNode} from "../types";
+import { AgentTestGroupNode, AgentTestNode, AiEvaluationDefinition, TestNode } from '../types';
 
 const NO_TESTS_MESSAGE = 'no tests found';
 const NO_TESTS_DESCRIPTION = 'no test description';
 const AGENT_TESTS = 'AgentTests';
-
-export const AGENT_GROUP_RANGE = new vscode.Range(new vscode.Position(0, 0), new vscode.Position(0, 1));
-
-const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> => {
+const parseAgentTestsFromProject = async (): Promise<Map<string, AgentTestGroupNode>> => {
   const aiTestDefs = await vscode.workspace.findFiles('**/*.aiEvaluationDefinition-meta.xml');
   //from the aiTestDef files, parse the xml using fast-xml-parser, find the testSetName that it points to
-  const aggregator: AiEvaluationDefinition[] = [];
+  const aggregator = new Map<string, AgentTestGroupNode>();
   const parser = new xml.XMLParser();
   await Promise.all(
     aiTestDefs.map(async definition => {
-      const testDefinition = parser.parse((await vscode.workspace.fs.readFile(definition)).toString()) as {
-        AiEvaluationDefinition: AiEvaluationDefinition;
-      };
-      const collector: AiEvaluationDefinition = {
-        testCases: [],
-        testSetName: testDefinition.AiEvaluationDefinition.testSetName,
-        name: testDefinition.AiEvaluationDefinition.name,
-        subjectName: testDefinition.AiEvaluationDefinition.subjectName,
-        description: testDefinition.AiEvaluationDefinition.description,
-        location: new vscode.Location(definition, new vscode.Position(0, 0))
-      };
+      const testDefinition = parser.parse(
+        (await vscode.workspace.fs.readFile(definition)).toString()
+      ) as AiEvaluationDefinition;
+
+      const collector = new AgentTestGroupNode(
+        testDefinition.AiEvaluationDefinition.name,
+        new vscode.Location(definition, new vscode.Position(0, 0))
+      );
 
       //force-app/main/default/aiEvaluationTestsets/mysecondtest.aiEvaluationTestSet-meta.xml
       // there's probably a better way to find this file than searching for it
@@ -46,14 +40,16 @@ const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> =
       for (let i = 0; i <= content.length - 1; i++) {
         // read the aiTestDefs line by line, parsing for   <testCase> tags
         if (content[i].includes('<number>')) {
-          collector.testCases.push({
-            number: content[i].replace('<number>', '').replace('</number>', '').trim(),
-            location: new vscode.Location(aiTestSet[0], new vscode.Position(i, 5))
-          });
+          collector.children.push(
+            // we can set AgentTestNode.description = utterance?
+            new AgentTestNode(
+              `Test Case: ${content[i].replace('<number>', '').replace('</number>', '').trim()}`,
+              new vscode.Location(aiTestSet[0], new vscode.Position(i, 5))
+            )
+          );
         }
       }
-
-      aggregator.push(collector);
+      aggregator.set(collector.name, collector);
     })
   );
 
@@ -62,21 +58,15 @@ const parseAgentTestsFromProject = async (): Promise<AiEvaluationDefinition[]> =
 
 export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNode> {
   // communicates to VSC that the data has changed and needs to be rerendered - these are vitally important
-  private onDidChangeTestData: vscode.EventEmitter<TestNode | undefined> = new vscode.EventEmitter<
-    TestNode | undefined
-  >();
+  private onDidChangeTestData = new vscode.EventEmitter<TestNode | undefined>();
   public onDidChangeTreeData = this.onDidChangeTestData.event;
 
-  // matches test name 'geocodingservce' to test node (children)
-  // TODO: clean up agentTestMap/agentTestInfo relationships/types
-  private agentTestMap: Map<string, TestNode> = new Map<string, TestNode>();
+  // matches from definition name -> definition tree object, with children test cases
+  private agentTestMap = new Map<string, AgentTestGroupNode>();
   private rootNode: TestNode | null;
-  private agentTestInfo: AiEvaluationDefinition[] = [];
 
-  constructor(agentTestInfo: AiEvaluationDefinition[] = []) {
-    this.rootNode = null;
-    this.agentTestInfo = agentTestInfo;
-    this.getAllAgentTests();
+  constructor() {
+    this.rootNode = new AgentTestGroupNode(AGENT_TESTS);
   }
 
   public getChild(key: string): TestNode | undefined {
@@ -105,9 +95,8 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     if (element) {
       return element;
     } else {
-      this.getAllAgentTests();
       if (!(this.rootNode && this.rootNode.children.length > 0)) {
-        this.rootNode = new AgentTestNode(NO_TESTS_MESSAGE);
+        this.rootNode = new AgentTestGroupNode(NO_TESTS_MESSAGE);
         const testToDisplay = new AgentTestNode(NO_TESTS_MESSAGE);
         testToDisplay.description = NO_TESTS_DESCRIPTION;
         this.rootNode.children.push(testToDisplay);
@@ -117,46 +106,15 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
   }
 
   public async refresh(): Promise<void> {
-    this.rootNode = null; // Reset tests
+    this.rootNode = new AgentTestGroupNode(AGENT_TESTS);
     this.agentTestMap.clear();
-    this.agentTestInfo = await parseAgentTestsFromProject();
-    this.getAllAgentTests();
+    this.agentTestMap = await parseAgentTestsFromProject();
+    this.rootNode.children.push(...Array.from(this.agentTestMap.values()));
     this.refreshView();
   }
 
   public async collapseAll(): Promise<void> {
     return vscode.commands.executeCommand(`workbench.actions.treeView.${Commands.collapseAll}`);
-  }
-
-  private getAllAgentTests(): TestNode {
-    if (this.rootNode === null) {
-      // Starting Out
-      this.rootNode = new AgentTestGroupNode(AGENT_TESTS);
-    }
-    this.rootNode.children = new Array<TestNode>();
-    if (this.agentTestInfo) {
-      this.agentTestInfo.forEach(definition => {
-        let agentGroup = this.agentTestMap.get(definition.name) as AgentTestGroupNode;
-        if (!agentGroup) {
-          const groupLocation = new vscode.Location(definition.location.uri, AGENT_GROUP_RANGE);
-          agentGroup = new AgentTestGroupNode(definition.name, groupLocation);
-          this.agentTestMap.set(definition.name, agentGroup);
-        }
-
-        definition.testCases.forEach(test => {
-          const agentTest = new AgentTestNode(`Test Case: ${test.number}`, test.location);
-
-          this.agentTestMap.set(agentTest.name, agentTest);
-          agentGroup.children.push(agentTest);
-          if (this.rootNode && !(this.rootNode.children.indexOf(agentGroup) >= 0)) {
-            this.rootNode.children.push(agentGroup);
-          }
-        });
-      });
-      // Sorting independently so we don't lose the order of the test methods per test class.
-      this.rootNode.children.sort((a, b) => a.name.localeCompare(b.name));
-    }
-    return this.rootNode;
   }
 }
 

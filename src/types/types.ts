@@ -1,12 +1,15 @@
 import vscode from "vscode";
 
 export type AiEvaluationDefinition = {
-    testSetName: string;
-    name: string;
-    subjectName: string;
-    description: string;
-    testCases: AgentTestCase[];
-    location: vscode.Location;
+    AiEvaluationDefinition:{
+        testSetName: string;
+        name: string;
+        subjectName: string;
+        description: string;
+        testCases: AgentTestCase[];
+        location: vscode.Location;
+    }
+
 };
 
 export type AgentTestCase = {
