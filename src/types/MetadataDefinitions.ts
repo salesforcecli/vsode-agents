@@ -9,7 +9,6 @@ export type AiEvaluationDefinition = {
         testCases: AgentTestCase[];
         location: vscode.Location;
     }
-
 };
 
 export type AgentTestCase = {

@@ -11,16 +11,16 @@ import { getTestOutlineProvider } from './views/testOutlineProvider';
 import { AgentTestRunner } from './views/testRunner';
 import { Commands } from './enums/commands';
 import type {TestNode} from "./types";
+import {CoreExtensionService} from "./services/coreExtensionService";
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 // see "contributes" property in package.json for command list
 export async function activate(context: vscode.ExtensionContext) {
+  const extensionHRStart = process.hrtime();
+
   try {
-    /**
-     * TODO:
-     * look at E4D CoreExtensionService to see if we need something similar
-     * decide if we want a hard CLI dependency, ensure it's installed, etc...
-     */
+    // We need to do this first in case any other services need access to those provided by the core extension
+    CoreExtensionService.loadDependencies(context);
 
     const versions = sync('sf', ['version', '--verbose', '--json']);
     if (!versions.output.toString().includes('agent')) {
@@ -33,6 +33,9 @@ export async function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(registerTestView());
     await getTestOutlineProvider().refresh();
     context.subscriptions.push(...disposables);
+
+    const telemetryService = CoreExtensionService.getTelemetryService();
+    telemetryService.sendExtensionActivationEvent(extensionHRStart);
   } catch (err: unknown) {
     throw new Error(`Failed to initialize: ${(err as Error).message}`);
   }

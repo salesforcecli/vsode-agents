@@ -1,6 +1,6 @@
 {
   "name": "salesforcedx-vscode-agents",
-  "displayName": "Develop Agents",
+  "displayName": "Agent Development Extension",
   "description": "Agents",
   "version": "0.0.1",
   "publisher": "salesforce",
@@ -17,7 +17,7 @@
   ],
   "main": "./lib/extension.js",
   "dependencies": {
-    "@salesforce/agents": "^0.5.11",
+    "@salesforce/agents": "^0.8.1",
     "@salesforce/core": "^8.8.0",
     "cross-spawn": "^7.0.6",
     "semver": "^7.6.3"

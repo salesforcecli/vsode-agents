@@ -1,2 +1,3 @@
-export * from './testNodes'
-export * from './types'
+export * from './TestNodes'
+export * from './MetadataDefinitions'
+export * from './ChannelService'
