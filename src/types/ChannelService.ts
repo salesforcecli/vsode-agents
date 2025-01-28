@@ -7,9 +7,9 @@
 
 // Note this is a subset of the ChannelService interface from the core extension
 export interface ChannelService {
-    getInstance(channelName: string): ChannelService;
-    showCommandWithTimestamp(commandName: string): void;
-    showChannelOutput(): void;
-    appendLine(text: string): void;
-    clear(): void;
+  getInstance(channelName: string): ChannelService;
+  showCommandWithTimestamp(commandName: string): void;
+  showChannelOutput(): void;
+  appendLine(text: string): void;
+  clear(): void;
 }

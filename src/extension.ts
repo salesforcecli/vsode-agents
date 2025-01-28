@@ -10,8 +10,8 @@ import { sync } from 'cross-spawn';
 import { getTestOutlineProvider } from './views/testOutlineProvider';
 import { AgentTestRunner } from './views/testRunner';
 import { Commands } from './enums/commands';
-import type {TestNode} from "./types";
-import {CoreExtensionService} from "./services/coreExtensionService";
+import type { TestNode } from './types';
+import { CoreExtensionService } from './services/coreExtensionService';
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 // see "contributes" property in package.json for command list

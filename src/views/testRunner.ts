@@ -50,7 +50,6 @@ export class AgentTestRunner {
   public async runAgentTest(test: AgentTestGroupNode) {
     const channelService = CoreExtensionService.getChannelService();
     try {
-      process.env.SF_MOCK_DIR = '/Users/william.ruemmele/projects/oss/agents/test/mocks';
       channelService.clear();
       channelService.showChannelOutput();
 
@@ -89,6 +88,11 @@ export class AgentTestRunner {
           );
           if (expectation.result === 'FAILURE') {
             channelService.appendLine(`\t ${expectation.errorMessage}`);
+            // also update image to failure
+            this.testOutline
+              .getChild(test.name)
+              ?.children.find(child => child.name === expectation.name)
+              ?.updateOutcome('Error');
           }
           channelService.appendLine(`\n`);
         });

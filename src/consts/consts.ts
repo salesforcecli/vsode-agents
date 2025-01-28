@@ -1,2 +1,2 @@
 // matches .displayName in pjson
-export const EXTENSION_NAME='Agent Development Extension'
+export const EXTENSION_NAME = 'Agent Development Extension';

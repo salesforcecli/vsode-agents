@@ -1,3 +1,3 @@
-export * from './TestNodes'
-export * from './MetadataDefinitions'
-export * from './ChannelService'
+export * from './TestNodes';
+export * from './MetadataDefinitions';
+export * from './ChannelService';
