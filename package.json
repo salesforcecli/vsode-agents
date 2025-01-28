@@ -32,6 +32,7 @@
     "@types/shelljs": "^0.8.15",
     "@types/vscode": "^1.94.0",
     "@typescript-eslint/eslint-plugin": "^8.2.0",
+    "@vscode/vsce": "^3.1.0",
     "commitizen": "^4.2.5",
     "cz-conventional-changelog": "3.3.0",
     "esbuild": "^0.23.1",
