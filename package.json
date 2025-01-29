@@ -81,7 +81,7 @@
     "lint": "eslint . --ext .ts",
     "update-snapshots": "jest --updateSnapshot",
     "test": "jest --coverage",
-    "bundle:extension": "esbuild ./src/index.ts  --bundle --outfile=dist/index.js --format=cjs --platform=node --external:vscode --minify",
+    "bundle:extension": "esbuild ./src/extension.ts  --bundle --outfile=dist/index.js --format=cjs --platform=node --external:vscode --minify",
     "vscode:package": "npm run bundle:extension && ts-node  ./scripts/vsce-bundled-extension.ts",
     "vsix:install": "find ./ -name '*.vsix' -exec code --install-extension {} \\;",
     "vsix:install-insiders": "find ./ -name '*.vsix' -exec code-insiders --install-extension {} \\;",
