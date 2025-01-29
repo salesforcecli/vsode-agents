@@ -60,6 +60,7 @@ export class AgentTestRunner {
         aliasOrUsername: configAggregator.getPropertyValue<string>('target-org') ?? 'undefined'
       });
 
+
       const tester = new AgentTester(org.getConnection());
       channelService.appendLine(`Starting ${test.name} tests: ${new Date().toLocaleString()}`);
       const response = await tester.start(test.name, 'name');
@@ -72,29 +73,31 @@ export class AgentTestRunner {
 
       channelService.appendLine(`Finished ${test.name} - Status: ${result.status}`);
       result.testSet.testCases.forEach(testCase => {
-        channelService.appendLine(`Test: ${testCase.utterance}`);
         testCase.expectationResults.forEach(expectation => {
-          channelService.appendLine(expectation.result === 'PASS' ? `\t --- PASS ---` : `\t --- FAIL ---`);
-          channelService.appendLine(`\t Expectation Name: ${expectation.name}`);
-          // helps wrap string expectations in quotes to separate from other verbiage on the line
-          if (!expectation.expectedValue.startsWith('[') && !expectation.actualValue.startsWith('[')) {
-            expectation.expectedValue = `"${expectation.expectedValue}"`;
-            expectation.actualValue = `"${expectation.actualValue}"`;
-          }
-
-          channelService.appendLine(`\t Expected ${expectation.expectedValue} to equal ${expectation.actualValue}`);
-          channelService.appendLine(
-            `\t ${expectation.metricLabel}, ${expectation.metricExplainability}: ${expectation.score}`
-          );
+          // only print to the output panel for failures
           if (expectation.result === 'FAILURE') {
+            channelService.appendLine(`Failed: ${testCase.utterance}`);
+            channelService.appendLine(`\t --- ${expectation.name} ---`);
+
+            // helps wrap string expectations in quotes to separate from other verbiage on the line
+            if (!expectation.expectedValue.startsWith('[') && !expectation.actualValue.startsWith('[')) {
+              expectation.expectedValue = `"${expectation.expectedValue}"`;
+              expectation.actualValue = `"${expectation.actualValue}"`;
+            }
+
+            channelService.appendLine(`\t Expected: ${expectation.expectedValue}`);
+            channelService.appendLine(`\t Actual: ${expectation.actualValue}`);
+            channelService.appendLine(
+                `\t ${expectation.metricLabel}, ${expectation.metricExplainability}: ${expectation.score}`
+            );
             channelService.appendLine(`\t ${expectation.errorMessage}`);
             // also update image to failure
             this.testOutline
-              .getChild(test.name)
-              ?.children.find(child => child.name === expectation.name)
-              ?.updateOutcome('Error');
+                .getChild(test.name)
+                ?.children.find(child => child.name === expectation.name)
+                ?.updateOutcome('Error');
+            channelService.appendLine(`\n`);
           }
-          channelService.appendLine(`\n`);
         });
       });
     } catch (e) {

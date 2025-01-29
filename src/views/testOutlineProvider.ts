@@ -20,36 +20,27 @@ const parseAgentTestsFromProject = async (): Promise<Map<string, AgentTestGroupN
   const parser = new xml.XMLParser();
   await Promise.all(
     aiTestDefs.map(async definition => {
-      const testDefinition = parser.parse(
-        (await vscode.workspace.fs.readFile(definition)).toString()
-      ) as AiEvaluationDefinition;
+      const fileContent = (await vscode.workspace.fs.readFile(definition)).toString();
+      const testDefinition = parser.parse(fileContent) as AiEvaluationDefinition;
 
-      const collector = new AgentTestGroupNode(
+      const testDefinitionNode = new AgentTestGroupNode(
         testDefinition.AiEvaluationDefinition.name,
         new vscode.Location(definition, new vscode.Position(0, 0))
       );
 
-      //force-app/main/default/aiEvaluationTestsets/mysecondtest.aiEvaluationTestSet-meta.xml
-      // there's probably a better way to find this file than searching for it
-      const aiTestSet = await vscode.workspace.findFiles(
-        `**/${testDefinition.AiEvaluationDefinition.testSetName}.aiEvaluationTestSet-meta.xml`
-      );
+      const splitContent = fileContent.split(EOL);
 
-      const content = (await vscode.workspace.fs.readFile(aiTestSet[0])).toString().split(EOL);
+      testDefinition.AiEvaluationDefinition.testCase.map(test => {
+        const line = splitContent.findIndex(l => l.includes(`<number>${test.number}</number`));
+        const testcaseNode = new AgentTestNode(
+          `#${test.number}`,
+          new vscode.Location(definition, new vscode.Position(line, 8))
+        );
+        testcaseNode.description = test.inputs.utterance;
+        testDefinitionNode.children.push(testcaseNode);
+      });
 
-      for (let i = 0; i <= content.length - 1; i++) {
-        // read the aiTestDefs line by line, parsing for   <testCase> tags
-        if (content[i].includes('<number>')) {
-          collector.children.push(
-            // we can set AgentTestNode.description = utterance?
-            new AgentTestNode(
-              `Test Case: ${content[i].replace('<number>', '').replace('</number>', '').trim()}`,
-              new vscode.Location(aiTestSet[0], new vscode.Position(i, 5))
-            )
-          );
-        }
-      }
-      aggregator.set(collector.name, collector);
+      aggregator.set(testDefinitionNode.name, testDefinitionNode);
     })
   );
 

@@ -1,6 +1,6 @@
 {
   "name": "salesforcedx-vscode-agents",
-  "displayName": "Agent Development Extension",
+  "displayName": "Agentforce DX",
   "description": "Agents",
   "version": "0.0.1",
   "publisher": "salesforce",
