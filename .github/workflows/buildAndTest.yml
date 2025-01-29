@@ -1,0 +1,28 @@
+name: Build and Test
+on:
+  workflow_dispatch:
+  workflow_call:
+    inputs:
+      branch-name:
+        description: Branch name to run this workflow on
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+      label:
+        description: Label for the generated vsix artifact
+        default: AFDXExtension
+        required: false
+        type: string
+
+jobs:
+  unit-tests:
+    uses: ./.github/workflows/unitTests.yml
+    secrets: inherit
+    with:
+      branch-name: ${{ inputs.branch-name }}
+  build-all:
+    uses: ./.github/workflows/build.yml
+    secrets: inherit
+    with:
+      branch-name: ${{ inputs.branch-name }}
+      label: ${{ inputs.label }}

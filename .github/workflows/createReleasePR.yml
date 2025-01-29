@@ -1,0 +1,22 @@
+name: Create Release PR
+on:
+  workflow_call:
+    inputs:
+      branch-name:
+        description: Branch name for the release
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+
+jobs:
+  create-release-pr:
+    name: Create Release PR
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch-name }}
+          token: ${{ secrets.IDEE_GH_TOKEN }}
+      - env:
+          GITHUB_TOKEN: ${{ secrets.IDEE_GH_TOKEN }}
+        run: gh pr create -B main -H ${{ inputs.branch-name }} -t "${{ format('chore{0} ', ':') }} Merge ${{ inputs.branch-name }} branch into main" -F .github/PULL_REQUEST_TEMPLATE.md -a ${{ github.triggering_actor }}
