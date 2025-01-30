@@ -1,0 +1,55 @@
+name: Generate Release Changelog
+on:
+  workflow_call:
+    inputs:
+      branch-name:
+        description: Branch name you want to generate a changelog for
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+      is-major-release:
+        description: Is this a major release
+        required: false
+        default: false
+        type: boolean
+      output-file:
+        description: File to output the changelog to. Default CHANGELOG.md, when providing 'false' no file will be generated / updated.
+        required: false
+        default: CHANGELOG.md
+        type: string
+
+jobs:
+  generate-release-changelog:
+    name: Generate Release Changelog
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch-name }}
+          token: ${{ secrets.IDEE_GH_TOKEN }}
+      - uses: ./.github/actions/gitConfig
+        with:
+          email: ${{ secrets.IDEE_GH_EMAIL }}
+      - name: major version release
+        if: inputs.is-major-release
+        run: npm version major
+      - uses: TriPSs/conventional-changelog-action@v4.1.1
+        with:
+          git-user-name: svc-idee-bot
+          git-user-email: svc_idee_bot@salesforce.com
+          github-token: ${{ secrets.IDEE_GH_TOKEN }}
+          git-branch: ${{ inputs.branch-name }} # The branch used to push. Default is the current branch (${{ github.ref }})
+          input-file: CHANGELOG.md # Read the changelog from this file. This will prepend the newly generated changelogs to the file's content.
+          skip-tag: true # Do not tag the release. Helpful for using action to check if a release is going to be made. Default 'false'.
+          skip-on-empty: false # Boolean to specify if you want to skip empty release (no-changelog generated). This case occurred when you push chore commit with angular for example. Default 'true'.
+          output-file: ${{ inputs.output-file }} # File to output the changelog to. Default CHANGELOG.md, when providing 'false' no file will be generated / updated.
+      - run: |
+          git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+          npm install
+          git add package-lock.json
+      - run: |
+          npm run prettier
+          git add CHANGELOG.md
+      - run: |
+          git commit -m "chore: version bumping package-lock.json and running prettier on CHANGELOG.md"
+          git push origin ${{ inputs.branch-name }}

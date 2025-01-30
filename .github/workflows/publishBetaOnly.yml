@@ -1,6 +1,7 @@
 name: Publish Beta to Github Only
 
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       runId:

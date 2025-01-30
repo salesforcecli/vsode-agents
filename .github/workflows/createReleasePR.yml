@@ -1,5 +1,6 @@
 name: Create Release PR
 on:
+  workflow_dispatch:
   workflow_call:
     inputs:
       branch-name:
