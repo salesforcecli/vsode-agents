@@ -35,17 +35,17 @@ jobs:
         with:
           name: ${{ inputs.release-version }}
           path: ./extensions
-#      - name: copy over extensions required for Agentforce DX
-#        run: cp ./extensionsDeps/*.vsix ./extensions
-#      - name: Display downloaded vsix files
-#        run: ls -R ./extensions
+      #      - name: copy over extensions required for Agentforce DX
+      #        run: cp ./extensionsDeps/*.vsix ./extensions
+      #      - name: Display downloaded vsix files
+      #        run: ls -R ./extensions
       - run: "find ./extensions -name '*.vsix' -exec shasum -a 256 {} >> ./SHA256 \\;"
       - run: cat ./sha/SHA-1.md SHA256 ./sha/SHA-2.md > SHA256.md
       - run: rm ./SHA256
-#      - name: Configure Git for private repo access
-#        run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - run: npm ci
-      - run: npm run prettier
+      #      - name: Configure Git for private repo access
+      #        run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - run: yarn install --frozen-lockfile
+      - run: yarn run prettier
       - run: |
           git add SHA256.md CHANGELOG.md package.json
           git commit -m "chore: updated SHA256 v${{ env.RELEASE_VERSION }}"

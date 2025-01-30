@@ -76,9 +76,9 @@ shell.cp('-R', directoryToConstruct, `${buildLocation}/`);
 chdir(`${buildLocation}/extension`);
 logger('Now in ' + process.cwd());
 
-// Run npm install
-logger('executing npm install');
-shell.exec(`npm install`);
+// Run yarn install
+logger('executing yarn install');
+shell.exec(`yarn install`);
 
 // Run the vsce package command
 logger('Execute vsce');

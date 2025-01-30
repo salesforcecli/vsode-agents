@@ -24,12 +24,12 @@ on:
       workflow:
         description: Caller workflow
         type: string
-#      summary:
-#        description: Summary of e2e results
-#        type: string
-#      testsBranch:
-#        description: Branch from the E2E Automation Tests repo
-#        type: string
+      #      summary:
+      #        description: Summary of e2e results
+      #        type: string
+      #      testsBranch:
+      #        description: Branch from the E2E Automation Tests repo
+      #        type: string
       vscodeVersion:
         description: VSCode version that the tests were run on
         type: string
@@ -91,7 +91,6 @@ jobs:
             }
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.CLI_TEAM_SLACK_WEBHOOK_URL }}
-
 #  e2e_notification:
 #    runs-on: ubuntu-latest
 #    if: inputs.type == 'e2e'

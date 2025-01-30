@@ -10,12 +10,12 @@
   "icon": "images/VSCodeBundle.png",
   "license": "BSD-3-Clause",
   "engines": {
-    "vscode": "^1.86.0"
+    "vscode": "^1.94.0"
   },
   "categories": [
     "Other"
   ],
-  "main": "./lib/extension.js",
+  "main": "dist/index.js",
   "dependencies": {
     "@salesforce/core": "^8.8.0",
     "cross-spawn": "^7.0.6",
@@ -54,28 +54,12 @@
     "typescript": "^5.6.2",
     "vscode-test": "^1.6.1"
   },
-  "packaging": {
-    "assets": [
-      "LICENSE",
-      "package.nls.json",
-      "README.md",
-      "images",
-      "dist"
-    ],
-    "packageUpdates": {
-      "main": "dist/index.js",
-      "dependencies": {
-        "applicationinsights": "^3.2.2"
-      },
-      "devDependencies": {}
-    }
-  },
   "scripts": {
     "build": "tsc --build",
     "build:clean": "tsc --build --clean",
     "compile": "tsc --build",
     "compile:clean": "tsc --build --clean",
-    "reinstall": "git checkout -- package-lock.json && git clean -xfd && npm install",
+    "reinstall": "git checkout -- package-lock.json && git clean -xfd && yarn install",
     "watch": "tsc --build --watch",
     "prettier": "prettier --write .",
     "prettier-check": "prettier --check .",
@@ -87,7 +71,13 @@
     "vscode:package": "npm run bundle:extension && ts-node  ./scripts/vsce-bundled-extension.ts",
     "vsix:install": "find ./ -name '*.vsix' -exec code --install-extension {} \\;",
     "vsix:install-insiders": "find ./ -name '*.vsix' -exec code-insiders --install-extension {} \\;",
-    "reformat": "node scripts/reformat-with-prettier.js"
+    "reformat": "node scripts/reformat-with-prettier.js",
+    "update-for-packaging": "ts-node scripts/updatePackageJsonForVSIX.js"
+  },
+  "packaging": {
+    "packageUpdates": {
+      "main": "dist/index.js"
+    }
   },
   "extensionDependencies": [
     "salesforce.salesforcedx-vscode-core"

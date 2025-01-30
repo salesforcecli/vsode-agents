@@ -25,12 +25,11 @@ jobs:
         with:
           node-version-file: '.nvmrc'
           cache: npm
-#      - name: Configure Git for private repo access
-#        run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - run: npm ci
-      - run: npm --version
+      #      - name: Configure Git for private repo access
+      #        run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - run: yarn install --frozen-lockfile
       - run: node --version
-      - run: npm run compile
+      - run: yarn build
       - run: npx vsce package --follow-symlinks
 #      - name: Stage Artifacts
 #        run: |
