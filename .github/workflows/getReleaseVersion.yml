@@ -1,0 +1,28 @@
+name: Get Release Version
+on:
+  workflow_call:
+    inputs:
+      branch-name:
+        description: Branch name to run this workflow on
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+    outputs:
+      release-version:
+        description: Release version for the specified branch
+        value: ${{ jobs.get-release-version.outputs.release-version }}
+
+jobs:
+  get-release-version:
+    runs-on: ubuntu-latest
+    outputs:
+      release-version: ${{ steps.getReleaseVersion.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch-name }}
+          token: ${{ secrets.IDEE_GH_TOKEN }}
+      - id: getReleaseVersion
+        run: |
+          echo "version="$(node -pe "require('./package.json').version")"" >> $GITHUB_OUTPUT
+      - run: echo "${{ inputs.branch-name }} Release Version is ${{ steps.getReleaseVersion.outputs.version }}"

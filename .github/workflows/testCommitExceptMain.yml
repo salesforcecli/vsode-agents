@@ -7,4 +7,3 @@ jobs:
   build-and-test:
     uses: ./.github/workflows/buildAndTest.yml
     secrets: inherit
-
