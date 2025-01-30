@@ -1,4 +1,4 @@
-#name: Update Public Repository with New Release
+name: Update Public Repository with New Release (disabled)
 #run-name: ${{ github.triggering_actor }} is updating our public repo from ${{ github.ref_name }}
 #on:
 #  workflow_dispatch: #  Button for publishing from input branch in case there is a failure on the release.
