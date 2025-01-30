@@ -1,0 +1,43 @@
+name: Merge Release Branch
+run-name: ${{ github.triggering_actor }} is running Merge Release Branch from the '${{ github.ref_name }}' branch
+on:
+  workflow_dispatch:
+
+jobs:
+  merge-release-pr:
+    name: Merge Release Branch
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.IDEE_GH_TOKEN }}
+      - name: Check branch name
+        id: check_branch
+        run: echo "Branch name ${{ github.ref_name }}"
+          if [[ ${{ github.ref_name }} != release* ]]
+          then
+          echo "${{ github.ref_name }} does not start with 'release'. Exiting."
+          exit 1
+          fi
+      - name: Get PR number
+        id: pr
+        run: |
+          PR=$(gh pr list --json number,headRefName --jq '.[] | select(.headRefName == "${{ github.ref_name }}") | .number')
+          echo "::set-output name=number::$PR"
+        env:
+          GH_TOKEN: ${{ secrets.IDEE_GH_TOKEN }}
+      - name: Enable Merge Commits
+        id: enable_merge_commits
+        run: gh repo edit "github.com/forcedotcom/vscode-agents" --enable-merge-commit
+        env:
+          GH_TOKEN: ${{ secrets.IDEE_GH_TOKEN }}
+      - name: Merge PR
+        run: echo "${{ steps.pr.outputs.number }}"
+          gh pr merge ${{ steps.pr.outputs.number }} --merge --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.IDEE_GH_TOKEN }}
+      - name: Disable Merge Commits
+        id: disable_merge_commits
+        run: gh repo edit "github.com/forcedotcom/vscode-agents" --enable-merge-commit=false
+        env:
+          GH_TOKEN: ${{ secrets.IDEE_GH_TOKEN }}
