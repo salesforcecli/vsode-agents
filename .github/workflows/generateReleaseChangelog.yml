@@ -46,7 +46,7 @@ jobs:
       - run: |
           git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
           yarn install --frozen-lockfile
-          git add package-lock.json
+          git add yarn.lock
       - run: |
           npm run prettier
           git add CHANGELOG.md
