@@ -1,4 +1,4 @@
-import vscode from 'vscode';
+import * as vscode from 'vscode';
 import { TestStatus } from '@salesforce/agents';
 import { getTestOutlineProvider } from '../views/testOutlineProvider';
 

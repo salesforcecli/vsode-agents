@@ -2,11 +2,19 @@
 // The configuration from this file is loaded first, then overridden by those in the inheriting config file. But path-based compiler options (outDir, outFile, rootDir, include, exclude, files) are resolved from the config file they're found in. They cannot be extended (https://github.com/microsoft/TypeScript/issues/29172).
 // Config ref: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html
 {
-  "extends": "@salesforce/dev-config/tsconfig-strict-esm",
   "compilerOptions": {
+    "module": "commonjs",
+    "target": "ES2021",
     "outDir": "lib",
-    "rootDir": "src",
-    "jsx": "react"
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
+    "sourceMap": true,
+    "rootDir": ".",
+    "strict": true,
+    /* Additional Checks */
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedParameters": true,
+    "esModuleInterop": false,
+    "jsx": "preserve"
   },
-  "include": ["./src/**/*.ts", "./src/**/*.tsx"]
+  "exclude": ["test/**/*.test.ts",  "node_modules", ]
 }

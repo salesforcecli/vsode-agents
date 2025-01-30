@@ -13,4 +13,11 @@ vsc-extension-quickstart.md
 .sf/**
 .prettierignore
 .nvmrc
+lib/**
+coverage/**
+jest.config.js
+test/**
+contributing/
+node_modules/
+!node_modules/@vscode/codicons
 
