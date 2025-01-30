@@ -1,0 +1,29 @@
+name: Release
+on:
+  workflow_call:
+    inputs:
+      branch-name:
+        description: Branch name to run this workflow on
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+      release-version:
+        description: Release version for the specified branch
+        required: true
+        type: string
+
+jobs:
+  release-start-notification:
+    uses: ./.github/workflows/slackNotification.yml
+    secrets: inherit
+    with:
+      title: 'Release in github.'
+      notification: 'Release job in progress.'
+      type: 'notification'
+      workflow: 'release.yml'
+  release:
+    uses: ./.github/workflows/tagAndRelease.yml
+    secrets: inherit
+    with:
+      branch-name: ${{ inputs.branch-name }}
+      release-version: ${{ inputs.release-version }}

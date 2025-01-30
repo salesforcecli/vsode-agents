@@ -1,0 +1,36 @@
+name: Create Release Branch
+on:
+  workflow_call:
+    inputs:
+      branch-name:
+        description: Branch name for the release
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+    outputs:
+      branch-name:
+        description: Name of the release branch created
+        value: ${{ jobs.create-release-branch.outputs.branch-name }}
+
+jobs:
+  create-release-branch:
+    name: Create Release Branch
+    runs-on: ubuntu-latest
+    outputs:
+      date: ${{ steps.get-todays-date.outputs.date }}
+      branch-name: ${{ steps.get-new-branch-name.outputs.branch-name }}
+    steps:
+      - id: get-todays-date
+        run: echo "date=$(TZ=America/Los_Angeles date +'%m-%d-%Y')" >> $GITHUB_OUTPUT
+      - run: echo "Getting today's date in PST, ${{ steps.get-todays-date.outputs.date }}"
+      - id: get-new-branch-name
+        run: echo "branch-name=release/${{ steps.get-todays-date.outputs.date }}-${{ github.run_attempt }}" >> $GITHUB_OUTPUT
+      - run: echo "Getting new branch name, ${{ steps.get-new-branch-name.outputs.branch-name }}"
+      - run: echo "Checking out new release branch from '${{ inputs.branch-name }}' source branch"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch-name }}
+          token: ${{ secrets.IDEE_GH_TOKEN }}
+      - run: git checkout -b ${{ steps.get-new-branch-name.outputs.branch-name }}
+      - run: git push origin ${{ steps.get-new-branch-name.outputs.branch-name }}
+      - run: echo "Created new branch, ${{ steps.get-new-branch-name.outputs.branch-name }}"

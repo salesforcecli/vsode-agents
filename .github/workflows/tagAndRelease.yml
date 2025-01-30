@@ -1,0 +1,95 @@
+name: Tag and Release
+
+on:
+  workflow_call:
+    inputs:
+      branch-name:
+        description: Branch name to run this workflow on
+        required: false
+        default: ${{ github.ref_name }}
+        type: string
+      release-version:
+        description: Release version for the specified branch
+        required: true
+        type: string
+
+jobs:
+  updating-sha-for-release:
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ inputs.release-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch-name }}
+          token: ${{ secrets.IDEE_GH_TOKEN }}
+      - uses: ./.github/actions/gitConfig
+        with:
+          email: ${{ secrets.IDEE_GH_EMAIL }}
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.release-version }}
+          path: ./extensions
+      #      - name: copy over extensions required for Agentforce DX
+      #        run: cp ./extensionsDeps/*.vsix ./extensions
+      #      - name: Display downloaded vsix files
+      #        run: ls -R ./extensions
+      - run: "find ./extensions -name '*.vsix' -exec shasum -a 256 {} >> ./SHA256 \\;"
+      - run: cat ./sha/SHA-1.md SHA256 ./sha/SHA-2.md > SHA256.md
+      - run: rm ./SHA256
+      #      - name: Configure Git for private repo access
+      #        run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
+      - run: yarn install --frozen-lockfile
+      - run: yarn run prettier
+      - run: |
+          git add SHA256.md CHANGELOG.md package.json
+          git commit -m "chore: updated SHA256 v${{ env.RELEASE_VERSION }}"
+      - run: echo "SHA256.md successfully generated and committed."
+      - run: git push origin ${{ inputs.branch-name }}
+
+  gitTag:
+    needs: ['updating-sha-for-release']
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ inputs.release-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch-name }}
+          token: ${{ secrets.IDEE_GH_TOKEN }}
+      - uses: ./.github/actions/gitConfig
+        with:
+          email: ${{ secrets.IDEE_GH_EMAIL }}
+      - run: |
+          git tag v${{ env.RELEASE_VERSION }}
+          git push origin v${{ env.RELEASE_VERSION }}
+
+  githubRelease:
+    needs: ['gitTag']
+    runs-on: ubuntu-latest
+    env:
+      RELEASE_VERSION: ${{ inputs.release-version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch-name }}
+          token: ${{ secrets.IDEE_GH_TOKEN }}
+      - uses: ./.github/actions/gitConfig
+        with:
+          email: ${{ secrets.IDEE_GH_EMAIL }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.release-version }}
+          path: ./extensions
+      - name: Display downloaded vsix files
+        run: ls -R ./extensions
+      - run: gh release create v${{ env.RELEASE_VERSION }} ./extensions/*.vsix --title "Release v${{ env.RELEASE_VERSION }}" --notes-file ./CHANGELOG.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.IDEE_GH_TOKEN }}
