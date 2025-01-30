@@ -1,9 +1,7 @@
-name: pr-validation
-
+name: Validate PR
 on:
   pull_request:
-    types: [opened, reopened, edited]
-    # only applies to PRs that want to merge to main
+    types: [opened, reopened, edited, synchronize]
     branches: [main]
 
 jobs:

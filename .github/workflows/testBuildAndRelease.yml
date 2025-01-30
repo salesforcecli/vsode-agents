@@ -1,0 +1,21 @@
+name: Test, Build, and Release
+run-name: ${{ github.triggering_actor }} is running Test, Build, and Release from '${{ github.ref_name }}' branch
+on:
+  workflow_dispatch:
+
+jobs:
+  get-release-version:
+    uses: ./.github/workflows/getReleaseVersion.yml
+    secrets: inherit
+  build-and-test:
+    uses: ./.github/workflows/buildAndTest.yml
+    secrets: inherit
+    needs: [get-release-version]
+    with:
+      label: ${{ needs.get-release-version.outputs.release-version }}
+  release:
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
+    needs: [get-release-version, build-and-test]
+    with:
+      release-version: ${{ needs.get-release-version.outputs.release-version }}

@@ -10,7 +10,7 @@ on:
       label:
         description: Label for the generated vsix artifact
         required: false
-        default: AFDXextension-${{ github.sha }}
+        default: EFDExtension-${{ github.sha }}
         type: string
 
 jobs:
@@ -31,13 +31,13 @@ jobs:
       - run: node --version
       - run: yarn build
       - run: npx vsce package --follow-symlinks
-#      - name: Stage Artifacts
-#        run: |
-#          mkdir extensions
-#          find . -name "*.vsix" -type f -exec cp {} ./extensions \;
-#      - run: echo "Label is ${{ inputs.label }}"
-#      - name: Upload Extensions
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: ${{ inputs.label }}
-#          path: ./extensions/
+      - name: Stage Artifacts
+        run: |
+          mkdir extensions
+          find . -name "*.vsix" -type f -exec cp {} ./extensions \;
+      - run: echo "Label is ${{ inputs.label }}"
+      - name: Upload Extensions
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.label }}
+          path: ./extensions/
