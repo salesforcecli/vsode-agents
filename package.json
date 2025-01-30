@@ -15,7 +15,7 @@
   "categories": [
     "Other"
   ],
-  "main": "dist/index.js",
+  "main": "lib/extension.js",
   "dependencies": {
     "@salesforce/agents": "^0.8.1",
     "@salesforce/core": "^8.8.0",

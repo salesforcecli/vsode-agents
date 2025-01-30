@@ -47,6 +47,19 @@ export class AgentTestRunner {
     }
   }
 
+  private translateExpectationNameToHumanFriendly(expectationName: string): 'Topic' | 'Actions' | 'Response' {
+    switch (expectationName) {
+      case 'topic_sequence_match':
+        return 'Topic';
+      case 'action_sequence_match':
+        return 'Actions';
+      case 'bot_response_rating':
+        return 'Response';
+      default:
+        return 'Response';
+    }
+  }
+
   public async runAgentTest(test: AgentTestGroupNode) {
     const channelService = CoreExtensionService.getChannelService();
     try {
@@ -59,7 +72,6 @@ export class AgentTestRunner {
       const org = await Org.create({
         aliasOrUsername: configAggregator.getPropertyValue<string>('target-org') ?? 'undefined'
       });
-
 
       const tester = new AgentTester(org.getConnection());
       channelService.appendLine(`Starting ${test.name} tests: ${new Date().toLocaleString()}`);
@@ -77,7 +89,7 @@ export class AgentTestRunner {
           // only print to the output panel for failures
           if (expectation.result === 'FAILURE') {
             channelService.appendLine(`Failed: ${testCase.utterance}`);
-            channelService.appendLine(`\t --- ${expectation.name} ---`);
+            channelService.appendLine(`\t --- ${this.translateExpectationNameToHumanFriendly(expectation.name)} ---`);
 
             // helps wrap string expectations in quotes to separate from other verbiage on the line
             if (!expectation.expectedValue.startsWith('[') && !expectation.actualValue.startsWith('[')) {
@@ -88,14 +100,14 @@ export class AgentTestRunner {
             channelService.appendLine(`\t Expected: ${expectation.expectedValue}`);
             channelService.appendLine(`\t Actual: ${expectation.actualValue}`);
             channelService.appendLine(
-                `\t ${expectation.metricLabel}, ${expectation.metricExplainability}: ${expectation.score}`
+              `\t ${expectation.metricLabel}, ${expectation.metricExplainability}: ${expectation.score}`
             );
             channelService.appendLine(`\t ${expectation.errorMessage}`);
             // also update image to failure
             this.testOutline
-                .getChild(test.name)
-                ?.children.find(child => child.name === expectation.name)
-                ?.updateOutcome('Error');
+              .getChild(test.name)
+              ?.children.find(child => child.description === testCase.utterance)
+              ?.updateOutcome('Error');
             channelService.appendLine(`\n`);
           }
         });
