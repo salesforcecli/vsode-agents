@@ -11,5 +11,5 @@
 
 #ECCN:Open Source
 
-*       @salesforcecli/cli
-*.md @salesforcecli/cli-docs
+*    forcedotcom/platform-cli
+*.md forcedotcom/cli-docs
