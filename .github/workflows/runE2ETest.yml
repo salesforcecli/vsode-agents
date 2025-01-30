@@ -1,4 +1,4 @@
-#name: Run E2E Test
+name: Run E2E Test (disabled)
 #on:
 #  workflow_call:
 #    inputs:
