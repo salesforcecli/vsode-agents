@@ -5,11 +5,11 @@ on:
 
 jobs:
   publish-start-notification:
-    name: 'Publish Einstein for Developers in MS Marketplace Start Notification'
+    name: 'Publish Agentforce DXs in MS Marketplace Start Notification'
     uses: ./.github/workflows/slackNotification.yml
     secrets: inherit
     with:
-      title: 'Publish Einstein for Developers in MS Marketplace waiting for approval in github.'
+      title: 'Publish Agentforce DXs in MS Marketplace waiting for approval in github.'
       notification: 'New Release triggered publish build and job is ready for approval.'
       type: 'notification'
       workflow: 'publishVSCode.yml'
@@ -46,5 +46,5 @@ jobs:
       - name: Configure Git for private repo access
         run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - run: npm ci
-      - run: find ./extensions -type f -name "salesforcedx-einstein-gpt*.vsix" -exec npx vsce publish --pat ${{ env.VSCE_PERSONAL_ACCESS_TOKEN }} --packagePath {} \;
+      - run: find ./extensions -type f -name "vscode-agents*.vsix" -exec npx vsce publish --pat ${{ env.VSCE_PERSONAL_ACCESS_TOKEN }} --packagePath {} \;
       - run: echo "SUCCESSFULLY published"

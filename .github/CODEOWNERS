@@ -11,5 +11,5 @@
 
 #ECCN:Open Source
 
-*    forcedotcom/platform-cli
-*.md forcedotcom/cli-docs
+-    forcedotcom/platform-cli
+\*.md forcedotcom/cli-docs

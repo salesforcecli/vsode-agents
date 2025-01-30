@@ -5,14 +5,15 @@ on:
 
 jobs:
   publish-start-notification:
-    name: 'Publish Einstein for Developer in Open VSX Start Notification'
+    name: 'Publish Agentforce DX in Open VSX Start Notification'
     uses: ./.github/workflows/slackNotification.yml
     secrets: inherit
-    with:
-      title: 'Publish Einstein for Developer in Open VSX waiting for approval in github.'
-      notification: 'New Release triggered publish build and job is ready for approval.'
-      type: 'notification'
-      workflow: 'publishOpenVSX.yml'
+#    don't publish to ovsx until stable
+#    with:
+#      title: 'Publish Agentforce DX in Open VSX waiting for approval in github.'
+#      notification: 'New Release triggered publish build and job is ready for approval.'
+#      type: 'notification'
+#      workflow: 'publishOpenVSX.yml'
   get-release-version:
     uses: ./.github/workflows/getReleaseVersion.yml
     secrets: inherit
@@ -46,5 +47,5 @@ jobs:
       - name: Configure Git for private repo access
         run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
       - run: npm ci
-      - run: find ./extensions -type f -name "salesforcedx-einstein-gpt*.vsix" -exec npx ovsx publish {} -p ${{ env.OVSX_PAT }} \;
+      - run: find ./extensions -type f -name "vscode-agents*.vsix" -exec npx ovsx publish {} -p ${{ env.OVSX_PAT }} \;
       - run: echo "SUCCESSFULLY published"

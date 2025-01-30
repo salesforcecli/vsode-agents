@@ -1,4 +1,4 @@
-#name: Einstein for Developers End to End Tests
+#name: Agentforce DXs End to End Tests
 #
 #on:
 #  workflow_dispatch:
@@ -122,7 +122,7 @@
 #    uses: ./.github/workflows/slackNotification.yml
 #    secrets: inherit
 #    with:
-#      title: 'Einstein for Developers End to End Tests'
+#      title: 'Agentforce DXs End to End Tests'
 #      vscodeVersion: ${{ inputs.vscodeVersion }}
 #      testsBranch: ${{ inputs.automationBranch }}
 #      summary: '\n- test sidebar: ${{ needs.testSidebar.result }}\n- test BCG: ${{ needs.testBCG.result }}\n- test autocomplete setting: ${{ needs.testAutoCompleteSetting.result }}\n- test tests generation: ${{ needs.testTestsGeneration.result }}\n'
@@ -136,7 +136,7 @@
 #    uses: ./.github/workflows/slackNotification.yml
 #    secrets: inherit
 #    with:
-#      title: 'Einstein for Developers End to End Tests'
+#      title: 'Agentforce DXs End to End Tests'
 #      vscodeVersion: ${{ inputs.vscodeVersion }}
 #      testsBranch: ${{ inputs.automationBranch }}
 #      summary: '\n- test sidebar: ${{ needs.testSidebar.result }}\n- test BCG: ${{ needs.testBCG.result }}\n- test autocomplete setting: ${{ needs.testAutoCompleteSetting.result }}\n- test tests generation: ${{ needs.testTestsGeneration.result }}\n'
@@ -150,7 +150,7 @@
 #    uses: ./.github/workflows/slackNotification.yml
 #    secrets: inherit
 #    with:
-#      title: 'Einstein for Developers End to End Tests'
+#      title: 'Agentforce DXs End to End Tests'
 #      vscodeVersion: ${{ inputs.vscodeVersion }}
 #      testsBranch: ${{ inputs.automationBranch }}
 #      summary: '\n- test sidebar: ${{ needs.testSidebar.result }}\n- test BCG: ${{ needs.testBCG.result }}\n- test autocomplete setting: ${{ needs.testAutoCompleteSetting.result }}\n- test tests generation: ${{ needs.testTestsGeneration.result }}\n'
