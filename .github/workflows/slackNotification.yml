@@ -34,8 +34,6 @@ on:
         description: VSCode version that the tests were run on
         type: string
     secrets:
-      IDEE_RELEASE_SLACK_WEBHOOK:
-        required: true
       CLI_TEAM_SLACK_WEBHOOK_URL:
         required: true
       CLI_ALERTS_SLACK_WEBHOOK:
