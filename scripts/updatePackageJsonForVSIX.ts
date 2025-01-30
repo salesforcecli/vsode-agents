@@ -4,8 +4,9 @@
  * Licensed under the BSD 3-Clause license.
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  **/
+import { writeFileSync } from 'fs';
 
-const logger = (msg, obj) => {
+const logger = (msg: string, obj?: unknown) => {
   if (!obj) {
     console.log(`*** ${msg}`);
   } else {
@@ -18,7 +19,6 @@ logger('CWD', { extensionDirectory });
 
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const packageContents = require(`${extensionDirectory}/package.json`);
-const {writeFileSync} = require("fs");
 if (!packageContents) {
   console.error('Failed to find extension package.json');
   process.exit(2);
