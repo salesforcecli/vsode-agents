@@ -9,7 +9,7 @@ import * as shell from 'shelljs';
 type WorkflowRun = {
   databaseId: string;
 };
-const EXTENSION_ID = 'salesforce.salesforcedx-einstein-gpt';
+const EXTENSION_ID = 'salesforce.salesforcedx-vscode-agents';
 const SAVE_DIRECTORY = './.localTesting/';
 const IDE = process.argv[2] as string;
 
@@ -51,15 +51,15 @@ const ghJobRun: WorkflowRun = JSON.parse(latestWorkflowForBranch.toString())[0];
 logger(`Saving the resources for job ID ${ghJobRun.databaseId} \n`);
 shell.exec(`gh run download ${ghJobRun.databaseId} --dir ${SAVE_DIRECTORY}`);
 
-const einsteinPath = shell.find(SAVE_DIRECTORY).filter(function (file) {
-  return file.includes('einstein');
+const agentsPath = shell.find(SAVE_DIRECTORY).filter(function (file) {
+  return file.includes('agents');
 });
 
-if (einsteinPath) {
+if (agentsPath) {
   logger('Cleaning up any old GPT versions (if applicable) and installing the new VSIX.');
   shell.exec(`${IDE} --uninstall-extension ${EXTENSION_ID}`);
-  shell.exec(`${IDE} --install-extension ${einsteinPath}`);
-  logger(`Done! Einstein VSIX was installed in ${IDE}. Reload VS Code and start your testing.`);
+  shell.exec(`${IDE} --install-extension ${agentsPath}`);
+  logger(`Done! Agents VSIX was installed in ${IDE}. Reload VS Code and start your testing.`);
 } else {
-  logger(`No VSIX for Einstein could be installed from your ${SAVE_DIRECTORY}.`);
+  logger(`No VSIX for Agents could be installed from your ${SAVE_DIRECTORY}.`);
 }
