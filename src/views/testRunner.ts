@@ -47,16 +47,16 @@ export class AgentTestRunner {
     }
   }
 
-  private translateExpectationNameToHumanFriendly(expectationName: string): 'Topic' | 'Actions' | 'Response' {
+  private translateExpectationNameToHumanFriendly(expectationName: string): 'Topic' | 'Actions' | 'Outcome' {
     switch (expectationName) {
-      case 'topic_sequence_match':
+      case 'expectedTopic':
         return 'Topic';
-      case 'action_sequence_match':
+      case 'expectedActions':
         return 'Actions';
-      case 'bot_response_rating':
-        return 'Response';
+      case 'expectedOutcome':
+        return 'Outcome';
       default:
-        return 'Response';
+        return 'Outcome';
     }
   }
 
@@ -75,20 +75,24 @@ export class AgentTestRunner {
 
       const tester = new AgentTester(org.getConnection());
       channelService.appendLine(`Starting ${test.name} tests: ${new Date().toLocaleString()}`);
+
       const response = await tester.start(test.name, 'name');
       // begin in-progress
-      this.testOutline.getChild(test.name)?.updateOutcome(response.status);
+      this.testOutline.getChild(test.name)?.updateOutcome('IN_PROGRESS');
       channelService.appendLine(`Job Id: ${response.aiEvaluationId}`);
 
       const result = await tester.poll(response.aiEvaluationId, { timeout: Duration.minutes(100) });
-      this.testOutline.getChild(test.name)?.updateOutcome(result.status);
+      this.testOutline.getChild(test.name)?.updateOutcome('IN_PROGRESS', true);
 
       channelService.appendLine(`Finished ${test.name} - Status: ${result.status}`);
+
+      let hasFailure = false;
       result.testSet.testCases.forEach(testCase => {
-        testCase.expectationResults.forEach(expectation => {
+        testCase.testResults.forEach(expectation => {
           // only print to the output panel for failures
           if (expectation.result === 'FAILURE') {
-            channelService.appendLine(`Failed: ${testCase.utterance}`);
+            hasFailure = true;
+            channelService.appendLine(`Failed: ${testCase.inputs.utterance}`);
             channelService.appendLine(`\t --- ${this.translateExpectationNameToHumanFriendly(expectation.name)} ---`);
 
             // helps wrap string expectations in quotes to separate from other verbiage on the line
@@ -106,14 +110,22 @@ export class AgentTestRunner {
             // also update image to failure
             this.testOutline
               .getChild(test.name)
-              ?.children.find(child => child.description === testCase.utterance)
-              ?.updateOutcome('Error');
+              ?.children.find(child => child.description === testCase.inputs.utterance)
+              ?.updateOutcome('ERROR');
             channelService.appendLine(`\n`);
+          } else {
+            // updates the test case to completed
+            this.testOutline
+              .getChild(test.name)
+              ?.children.find(child => child.description === testCase.inputs.utterance)
+              ?.updateOutcome('COMPLETED');
           }
         });
       });
+
+      this.testOutline.getChild(test.name)?.updateOutcome(hasFailure ? 'ERROR' : 'COMPLETED');
     } catch (e) {
-      this.testOutline.getChild(test.name)?.updateOutcome('Error');
+      this.testOutline.getChild(test.name)?.updateOutcome('ERROR');
       channelService.appendLine(`Error running test: ${(e as Error).message}`);
     }
   }

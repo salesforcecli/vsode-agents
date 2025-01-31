@@ -27,9 +27,10 @@ jobs:
           cache: npm
       #      - name: Configure Git for private repo access
       #        run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - run: yarn install --frozen-lockfile
+      - run: npm ci
+      - run: npm --version
       - run: node --version
-      - run: yarn build
+      - run: npm run compile
       - run: npx vsce package --follow-symlinks
       - name: Stage Artifacts
         run: |

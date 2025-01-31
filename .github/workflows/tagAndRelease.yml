@@ -44,8 +44,8 @@ jobs:
       - run: rm ./SHA256
       #      - name: Configure Git for private repo access
       #        run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - run: yarn install --frozen-lockfile
-      - run: yarn run prettier
+      - run: npm ci
+      - run: npm run prettier
       - run: |
           git add SHA256.md CHANGELOG.md package.json
           git commit -m "chore: updated SHA256 v${{ env.RELEASE_VERSION }}"

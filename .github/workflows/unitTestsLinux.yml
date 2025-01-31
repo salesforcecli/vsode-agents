@@ -27,6 +27,6 @@ jobs:
           cache: npm
       - name: Configure Git for private repo access
         run: git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
-      - run: yarn install --frozen-lockfile
-      - run: yarn run compile
-      - run: yarn run test
+      - run: npm ci
+      - run: npm run compile
+      - run: npm run test
