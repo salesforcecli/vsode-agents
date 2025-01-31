@@ -2,7 +2,7 @@
   "name": "salesforcedx-vscode-agents",
   "displayName": "Agentforce DX",
   "description": "Agents",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "publisher": "salesforce",
   "repository": {
     "url": "https://github.com/salesforcecli/vsode-agents"
