@@ -46,7 +46,7 @@ jobs:
       - run: |
           git config --global --add url."https://${{ secrets.IDEE_GH_TOKEN }}@github.com/".insteadOf "https://github.com/"
           npm ci
-          git add yarn.lock
+          git add package-lock.json
       - run: |
           npm run prettier
           git add CHANGELOG.md
