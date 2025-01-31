@@ -20,4 +20,5 @@ test/**
 contributing/
 node_modules/
 !node_modules/@vscode/codicons
+!node_modules/@salesforce/core
 
