@@ -70,11 +70,13 @@ export class AgentTestGroupNode extends TestNode {
 
   public contextValue = 'agentTestGroup';
 
-  public updateOutcome(outcome: TestStatus): void {
+  public updateOutcome(outcome: TestStatus, applyToChildren?: boolean): void {
     super.updateOutcome(outcome);
-    this.children.forEach(child => {
-      child.updateOutcome(outcome);
-    });
+    if (applyToChildren) {
+      this.children.forEach(child => {
+        child.updateOutcome(outcome);
+      });
+    }
   }
 }
 
