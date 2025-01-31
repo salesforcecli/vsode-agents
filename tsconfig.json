@@ -16,5 +16,5 @@
     "esModuleInterop": false,
     "jsx": "preserve"
   },
-  "exclude": ["test/**/*.test.ts", "node_modules"]
+  "exclude": ["test/**/*.test.ts", "node_modules", "scripts"]
 }
