@@ -85,10 +85,10 @@ export class AgentTestRunner {
 
       channelService.appendLine(`Finished ${test.name} - Status: ${result.status}`);
       result.testSet.testCases.forEach(testCase => {
-        testCase.expectationResults.forEach(expectation => {
+        testCase.testResults.forEach(expectation => {
           // only print to the output panel for failures
           if (expectation.result === 'FAILURE') {
-            channelService.appendLine(`Failed: ${testCase.utterance}`);
+            channelService.appendLine(`Failed: ${test.description}`);
             channelService.appendLine(`\t --- ${this.translateExpectationNameToHumanFriendly(expectation.name)} ---`);
 
             // helps wrap string expectations in quotes to separate from other verbiage on the line
@@ -106,14 +106,14 @@ export class AgentTestRunner {
             // also update image to failure
             this.testOutline
               .getChild(test.name)
-              ?.children.find(child => child.description === testCase.utterance)
-              ?.updateOutcome('Error');
+              ?.children.find(child => child.description === testCase.inputs.utterance)
+              ?.updateOutcome('ERROR');
             channelService.appendLine(`\n`);
           }
         });
       });
     } catch (e) {
-      this.testOutline.getChild(test.name)?.updateOutcome('Error');
+      this.testOutline.getChild(test.name)?.updateOutcome('ERROR');
       channelService.appendLine(`Error running test: ${(e as Error).message}`);
     }
   }

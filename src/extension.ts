@@ -22,7 +22,7 @@ export async function activate(context: vscode.ExtensionContext) {
     // We need to do this first in case any other services need access to those provided by the core extension
     CoreExtensionService.loadDependencies(context);
 
-    const versions = sync('sf', ['version', '--verbose', '--json'], {shell:true, encoding: 'utf8'});
+    const versions = sync('sf', ['version', '--verbose', '--json'], { shell: true, encoding: 'utf8' });
     if (!versions?.output?.toString().includes('agent')) {
       throw new Error('sf CLI + plugin-agent installed required');
     }

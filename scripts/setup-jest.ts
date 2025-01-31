@@ -11,7 +11,7 @@ class EventEmitter {
   constructor() {}
   public event = (listener: any) => this.listeners.push(listener);
   public dispose = jest.fn();
-  public fire = (e: any) => this.listeners.forEach((listener) => listener(e));
+  public fire = (e: any) => this.listeners.forEach(listener => listener(e));
 }
 
 //TODO: parse this down to just what we need right now
@@ -35,7 +35,7 @@ const getMockVSCode = () => {
         }
       };
       public cancel = () => {
-        this.listeners.forEach((listener) => {
+        this.listeners.forEach(listener => {
           listener.call();
         });
       };

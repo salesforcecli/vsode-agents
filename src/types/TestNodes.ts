@@ -33,20 +33,21 @@ export abstract class TestNode extends vscode.TreeItem {
 
   public updateOutcome(outcome: TestStatus): void {
     switch (outcome) {
-      case 'Completed': // Passed Test
+      case 'COMPLETED': // Passed Test
         this.iconPath = {
           light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testPass.svg'),
           dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testPass.svg')
         };
         break;
-      case 'Error': // Failed test
+      case 'TERMINATED':
+      case 'ERROR':
         this.iconPath = {
           light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testFail.svg'),
           dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testFail.svg')
         };
         break;
-      case 'New':
-      case 'InProgress':
+      case 'NEW':
+      case 'IN_PROGRESS':
         this.iconPath = {
           light: vscode.Uri.joinPath(this.resourceDir, 'light', 'testInProgress.svg'),
           dark: vscode.Uri.joinPath(this.resourceDir, 'dark', 'testInProgress.svg')
