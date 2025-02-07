@@ -8,7 +8,7 @@
 import * as events from 'events';
 import * as vscode from 'vscode';
 import { AgentTestOutlineProvider } from './testOutlineProvider';
-import { AgentTester } from '@salesforce/agents';
+import {AgentTester, humanFriendlyName} from '@salesforce/agents';
 import { ConfigAggregator, Org } from '@salesforce/core';
 import { Duration } from '@salesforce/kit';
 import type { AgentTestGroupNode, TestNode } from '../types';
@@ -47,19 +47,6 @@ export class AgentTestRunner {
     }
   }
 
-  private translateExpectationNameToHumanFriendly(expectationName: string): 'Topic' | 'Actions' | 'Outcome' {
-    switch (expectationName) {
-      case 'expectedTopic':
-        return 'Topic';
-      case 'expectedActions':
-        return 'Actions';
-      case 'expectedOutcome':
-        return 'Outcome';
-      default:
-        return 'Outcome';
-    }
-  }
-
   public async runAgentTest(test: AgentTestGroupNode) {
     const channelService = CoreExtensionService.getChannelService();
     try {
@@ -93,7 +80,7 @@ export class AgentTestRunner {
           if (expectation.result === 'FAILURE') {
             hasFailure = true;
             channelService.appendLine(`Failed: ${testCase.inputs.utterance}`);
-            channelService.appendLine(`\t --- ${this.translateExpectationNameToHumanFriendly(expectation.name)} ---`);
+            channelService.appendLine(`\t --- ${humanFriendlyName(expectation.name)} ---`);
 
             // helps wrap string expectations in quotes to separate from other verbiage on the line
             if (!expectation.expectedValue.startsWith('[') && !expectation.actualValue.startsWith('[')) {
