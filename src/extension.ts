@@ -10,7 +10,7 @@ import { sync } from 'cross-spawn';
 import { getTestOutlineProvider } from './views/testOutlineProvider';
 import { AgentTestRunner } from './views/testRunner';
 import { Commands } from './enums/commands';
-import type { TestNode } from './types';
+import type { AgentTestGroupNode, TestNode } from './types';
 import { CoreExtensionService } from './services/coreExtensionService';
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
@@ -55,7 +55,7 @@ const registerTestView = (): vscode.Disposable => {
   );
 
   testViewItems.push(
-    vscode.commands.registerCommand(Commands.runTest, (test: TestNode) => testRunner.runAgentTest(test))
+    vscode.commands.registerCommand(Commands.runTest, (test: AgentTestGroupNode) => testRunner.runAgentTest(test))
   );
 
   // testViewItems.push(

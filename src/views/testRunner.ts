@@ -8,7 +8,7 @@
 import * as events from 'events';
 import * as vscode from 'vscode';
 import { AgentTestOutlineProvider } from './testOutlineProvider';
-import { AgentTester } from '@salesforce/agents';
+import {AgentTester, humanFriendlyName} from '@salesforce/agents';
 import { ConfigAggregator, Org } from '@salesforce/core';
 import { Duration } from '@salesforce/kit';
 import type { AgentTestGroupNode, TestNode } from '../types';
@@ -47,19 +47,6 @@ export class AgentTestRunner {
     }
   }
 
-  private translateExpectationNameToHumanFriendly(expectationName: string): 'Topic' | 'Actions' | 'Outcome' {
-    switch (expectationName) {
-      case 'expectedTopic':
-        return 'Topic';
-      case 'expectedActions':
-        return 'Actions';
-      case 'expectedOutcome':
-        return 'Outcome';
-      default:
-        return 'Outcome';
-    }
-  }
-
   public async runAgentTest(test: AgentTestGroupNode) {
     const channelService = CoreExtensionService.getChannelService();
     try {
@@ -78,22 +65,22 @@ export class AgentTestRunner {
 
       const response = await tester.start(test.name, 'name');
       // begin in-progress
-      this.testOutline.getChild(test.name)?.updateOutcome('IN_PROGRESS');
-      channelService.appendLine(`Job Id: ${response.aiEvaluationId}`);
+      this.testOutline.getTestGroup(test.name)?.updateOutcome('IN_PROGRESS', true);
+      channelService.appendLine(`Job Id: ${response.runId}`);
 
-      const result = await tester.poll(response.aiEvaluationId, { timeout: Duration.minutes(100) });
-      this.testOutline.getChild(test.name)?.updateOutcome('IN_PROGRESS', true);
+      const result = await tester.poll(response.runId, { timeout: Duration.minutes(100) });
+      this.testOutline.getTestGroup(test.name)?.updateOutcome('IN_PROGRESS', true);
 
       channelService.appendLine(`Finished ${test.name} - Status: ${result.status}`);
 
       let hasFailure = false;
-      result.testSet.testCases.forEach(testCase => {
+      result.testCases.forEach(testCase => {
         testCase.testResults.forEach(expectation => {
           // only print to the output panel for failures
           if (expectation.result === 'FAILURE') {
             hasFailure = true;
             channelService.appendLine(`Failed: ${testCase.inputs.utterance}`);
-            channelService.appendLine(`\t --- ${this.translateExpectationNameToHumanFriendly(expectation.name)} ---`);
+            channelService.appendLine(`\t --- ${humanFriendlyName(expectation.name)} ---`);
 
             // helps wrap string expectations in quotes to separate from other verbiage on the line
             if (!expectation.expectedValue.startsWith('[') && !expectation.actualValue.startsWith('[')) {
@@ -109,23 +96,25 @@ export class AgentTestRunner {
             channelService.appendLine(`\t ${expectation.errorMessage}`);
             // also update image to failure
             this.testOutline
-              .getChild(test.name)
-              ?.children.find(child => child.description === testCase.inputs.utterance)
+              .getTestGroup(test.name)
+              ?.getChildren()
+              .find(child => child.name === `#${testCase.testNumber}`)
               ?.updateOutcome('ERROR');
             channelService.appendLine(`\n`);
           } else {
             // updates the test case to completed
             this.testOutline
-              .getChild(test.name)
-              ?.children.find(child => child.description === testCase.inputs.utterance)
+              .getTestGroup(test.name)
+              ?.getChildren()
+              .find(child => child.name === `#${testCase.testNumber}`)
               ?.updateOutcome('COMPLETED');
           }
         });
       });
 
-      this.testOutline.getChild(test.name)?.updateOutcome(hasFailure ? 'ERROR' : 'COMPLETED');
+      this.testOutline.getTestGroup(test.name)?.updateOutcome(hasFailure ? 'ERROR' : 'COMPLETED');
     } catch (e) {
-      this.testOutline.getChild(test.name)?.updateOutcome('ERROR');
+      this.testOutline.getTestGroup(test.name)?.updateOutcome('ERROR', true);
       channelService.appendLine(`Error running test: ${(e as Error).message}`);
     }
   }
