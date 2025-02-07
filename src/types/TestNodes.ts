@@ -78,6 +78,10 @@ export class AgentTestGroupNode extends TestNode {
       });
     }
   }
+
+  public getChildren(): TestNode[] {
+    return this.children;
+  }
 }
 
 /**

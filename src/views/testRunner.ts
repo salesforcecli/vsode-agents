@@ -78,16 +78,16 @@ export class AgentTestRunner {
 
       const response = await tester.start(test.name, 'name');
       // begin in-progress
-      this.testOutline.getChild(test.name)?.updateOutcome('IN_PROGRESS');
-      channelService.appendLine(`Job Id: ${response.aiEvaluationId}`);
+      this.testOutline.getTestGroup(test.name)?.updateOutcome('IN_PROGRESS', true);
+      channelService.appendLine(`Job Id: ${response.runId}`);
 
-      const result = await tester.poll(response.aiEvaluationId, { timeout: Duration.minutes(100) });
-      this.testOutline.getChild(test.name)?.updateOutcome('IN_PROGRESS', true);
+      const result = await tester.poll(response.runId, { timeout: Duration.minutes(100) });
+      this.testOutline.getTestGroup(test.name)?.updateOutcome('IN_PROGRESS', true);
 
       channelService.appendLine(`Finished ${test.name} - Status: ${result.status}`);
 
       let hasFailure = false;
-      result.testSet.testCases.forEach(testCase => {
+      result.testCases.forEach(testCase => {
         testCase.testResults.forEach(expectation => {
           // only print to the output panel for failures
           if (expectation.result === 'FAILURE') {
@@ -109,23 +109,25 @@ export class AgentTestRunner {
             channelService.appendLine(`\t ${expectation.errorMessage}`);
             // also update image to failure
             this.testOutline
-              .getChild(test.name)
-              ?.children.find(child => child.description === testCase.inputs.utterance)
+              .getTestGroup(test.name)
+              ?.getChildren()
+              .find(child => child.name === `#${testCase.testNumber}`)
               ?.updateOutcome('ERROR');
             channelService.appendLine(`\n`);
           } else {
             // updates the test case to completed
             this.testOutline
-              .getChild(test.name)
-              ?.children.find(child => child.description === testCase.inputs.utterance)
+              .getTestGroup(test.name)
+              ?.getChildren()
+              .find(child => child.name === `#${testCase.testNumber}`)
               ?.updateOutcome('COMPLETED');
           }
         });
       });
 
-      this.testOutline.getChild(test.name)?.updateOutcome(hasFailure ? 'ERROR' : 'COMPLETED');
+      this.testOutline.getTestGroup(test.name)?.updateOutcome(hasFailure ? 'ERROR' : 'COMPLETED');
     } catch (e) {
-      this.testOutline.getChild(test.name)?.updateOutcome('ERROR');
+      this.testOutline.getTestGroup(test.name)?.updateOutcome('ERROR', true);
       channelService.appendLine(`Error running test: ${(e as Error).message}`);
     }
   }

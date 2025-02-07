@@ -60,7 +60,7 @@ export class AgentTestOutlineProvider implements vscode.TreeDataProvider<TestNod
     this.rootNode = new AgentTestGroupNode(AGENT_TESTS);
   }
 
-  public getChild(key: string): AgentTestGroupNode| TestNode | undefined {
+  public getTestGroup(key: string): AgentTestGroupNode | undefined {
     return this.agentTestMap.get(key);
   }
 
