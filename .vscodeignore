@@ -1,3 +1,7 @@
+# Salesforce
+.sfdx/**
+.sf/**
+
 # Ignore TypeScript and build-related files
 **/*.map
 **/*.ts
