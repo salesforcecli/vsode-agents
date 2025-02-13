@@ -13,7 +13,7 @@
     /* Additional Checks */
     "noFallthroughCasesInSwitch": true,
     "noUnusedParameters": true,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "jsx": "preserve"
   },
   "exclude": ["test/**/*.test.ts", "node_modules", "scripts"]

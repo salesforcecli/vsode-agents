@@ -8,8 +8,8 @@
 import * as events from 'events';
 import * as vscode from 'vscode';
 import { AgentTestOutlineProvider } from './testOutlineProvider';
-import {AgentTester, humanFriendlyName} from '@salesforce/agents';
-import { ConfigAggregator, Org } from '@salesforce/core';
+import { AgentTester, humanFriendlyName } from '@salesforce/agents-bundle';
+import { ConfigAggregator, Org } from '@salesforce/core-bundle';
 import { Duration } from '@salesforce/kit';
 import type { AgentTestGroupNode, TestNode } from '../types';
 import { CoreExtensionService } from '../services/coreExtensionService';
