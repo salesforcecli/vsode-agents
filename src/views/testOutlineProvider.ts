@@ -36,6 +36,7 @@ const parseAgentTestsFromProject = async (): Promise<Map<string, AgentTestGroupN
           `#${test.number}`,
           new vscode.Location(definition, new vscode.Position(line, 8))
         );
+        testcaseNode.parentName = testDefinition.AiEvaluationDefinition.name;
         testcaseNode.description = test.inputs.utterance;
         testDefinitionNode.children.push(testcaseNode);
       });

@@ -8,14 +8,16 @@
 import * as events from 'events';
 import * as vscode from 'vscode';
 import { AgentTestOutlineProvider } from './testOutlineProvider';
-import { AgentTester, TestStatus } from '@salesforce/agents';
+import { AgentTester, TestStatus, AgentTestResultsResponse, humanFriendlyName } from '@salesforce/agents';
 import { ConfigAggregator, Lifecycle, Org } from '@salesforce/core';
 import { Duration } from '@salesforce/kit';
 import type { AgentTestGroupNode, TestNode } from '../types';
 import { CoreExtensionService } from '../services/coreExtensionService';
+import { AgentTestNode } from '../types';
 
 export class AgentTestRunner {
   private eventsEmitter: events.EventEmitter;
+  private testGroupNameToResult = new Map<string, AgentTestResultsResponse>();
   constructor(
     private testOutline: AgentTestOutlineProvider,
     eventsEmitter?: events.EventEmitter
@@ -28,6 +30,40 @@ export class AgentTestRunner {
     if (test.location) {
       vscode.window.showTextDocument(test.location.uri).then(() => {
         this.eventsEmitter.emit('sf:update_selection', test.location?.range);
+      });
+    }
+    const channelService = CoreExtensionService.getChannelService();
+    channelService.showChannelOutput();
+    channelService.clear();
+
+    const resultFromMap = this.testGroupNameToResult.get(test.name) ?? this.testGroupNameToResult.get(test.parentName);
+    if (resultFromMap) {
+      // set to a new var so we can remove test cases and not affect saved information
+      const testInfo = structuredClone(resultFromMap);
+      if (test instanceof AgentTestNode) {
+        // filter to selected test case
+        testInfo.testCases = testInfo.testCases.filter(f => `#${f.testNumber}` === test.name);
+      }
+      testInfo.testCases.map(tc => {
+        const content = ` ${testInfo.subjectName} (Test Case: ${tc.testNumber}) `;
+        const titlePadding = this.fillPadding(content.length + 4);
+        // +4, so there's two extra per side
+        channelService.appendLine(`┌${titlePadding}┐`);
+        channelService.appendLine(` ${content} `);
+        channelService.appendLine(`└${titlePadding}┘`);
+        channelService.appendLine('');
+        channelService.appendLine(`"${tc.inputs.utterance}"`);
+        channelService.appendLine('');
+        tc.testResults.map(tr => {
+          const title = `${humanFriendlyName(tr.name)} ─ ${tr.result}`;
+          // 37 char width bottom, 20 in top chars (excluding title) => 17
+          const padding = this.fillPadding(17 - title.length);
+          channelService.appendLine(`\t┌────────── ${title} ──${padding}────┐`);
+          channelService.appendLine(`\t EXPECTED: ${tr.expectedValue.replaceAll('\n', '')}`);
+          channelService.appendLine(`\t ACTUAL: ${tr.actualValue.replaceAll('\n', '')}`);
+          channelService.appendLine(`\t STATS: ${tr.metricLabel}, ${tr.score}`);
+          channelService.appendLine('\t└───────────────────────────────────┘');
+        });
       });
     }
   }
@@ -115,6 +151,7 @@ export class AgentTestRunner {
       channelService.appendLine(`Job Id: ${response.runId}`);
 
       const result = await tester.poll(response.runId, { timeout: Duration.minutes(100) });
+      this.testGroupNameToResult.set(test.name, result);
       this.testOutline.getTestGroup(test.name)?.updateOutcome('IN_PROGRESS', true);
       let hasFailure = false;
       result.testCases.map(tc => {
@@ -136,52 +173,13 @@ export class AgentTestRunner {
       channelService.appendLine(`Failing: ${failing}/${total}`);
       channelService.appendLine('');
       channelService.appendLine(`Select a test case in the Test View panel for more information`);
-
-      // channelService.appendLine(`Finished ${test.name} - Status: ${result.status}`);
-      //
-      // let hasFailure = false;
-      // result.testCases.forEach(testCase => {
-      //   testCase.testResults.forEach(expectation => {
-      //     // only print to the output panel for failures
-      //     if (expectation.result === 'FAILURE') {
-      //       hasFailure = true;
-      //       channelService.appendLine(`Failed: ${testCase.inputs.utterance}`);
-      //       channelService.appendLine(`\t --- ${humanFriendlyName(expectation.name)} ---`);
-      //
-      //       // helps wrap string expectations in quotes to separate from other verbiage on the line
-      //       if (!expectation.expectedValue.startsWith('[') && !expectation.actualValue.startsWith('[')) {
-      //         expectation.expectedValue = `"${expectation.expectedValue}"`;
-      //         expectation.actualValue = `"${expectation.actualValue}"`;
-      //       }
-      //
-      //       channelService.appendLine(`\t Expected: ${expectation.expectedValue}`);
-      //       channelService.appendLine(`\t Actual: ${expectation.actualValue}`);
-      //       channelService.appendLine(
-      //         `\t ${expectation.metricLabel}, ${expectation.metricExplainability}: ${expectation.score}`
-      //       );
-      //       channelService.appendLine(`\t ${expectation.errorMessage}`);
-      //       // also update image to failure
-      //       this.testOutline
-      //         .getTestGroup(test.name)
-      //         ?.getChildren()
-      //         .find(child => child.name === `#${testCase.testNumber}`)
-      //         ?.updateOutcome('ERROR');
-      //       channelService.appendLine(`\n`);
-      //     } else {
-      //       // updates the test case to completed
-      //       this.testOutline
-      //         .getTestGroup(test.name)
-      //         ?.getChildren()
-      //         .find(child => child.name === `#${testCase.testNumber}`)
-      //         ?.updateOutcome('COMPLETED');
-      //     }
-      //   });
-      // });
-      //
-      // this.testOutline.getTestGroup(test.name)?.updateOutcome(hasFailure ? 'ERROR' : 'COMPLETED');
     } catch (e) {
       this.testOutline.getTestGroup(test.name)?.updateOutcome('ERROR', true);
       channelService.appendLine(`Error running test: ${(e as Error).message}`);
     }
+  }
+
+  fillPadding(num: number): string {
+    return Array(num).fill('─').join('');
   }
 }
