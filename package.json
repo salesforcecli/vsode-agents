@@ -17,7 +17,7 @@
   ],
   "main": "lib/src/extension.js",
   "dependencies": {
-    "@salesforce/agents": "^0.9.7",
+    "@salesforce/agents": "^0.10.0",
     "@salesforce/core": "^8.8.2",
     "cross-spawn": "^7.0.6",
     "semver": "^7.7.0"
