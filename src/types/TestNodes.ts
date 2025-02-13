@@ -7,6 +7,8 @@ import { getTestOutlineProvider } from '../views/testOutlineProvider';
  */
 export abstract class TestNode extends vscode.TreeItem {
   public children = new Array<TestNode>();
+  public parentName = '';
+
   protected resourceDir = vscode.Uri.joinPath(
     vscode.extensions.getExtension('salesforce.salesforcedx-vscode-agents')!.extensionUri,
     'resources'
@@ -91,6 +93,5 @@ export class AgentTestNode extends TestNode {
   constructor(label: string, location?: vscode.Location) {
     super(label, vscode.TreeItemCollapsibleState.None, location ?? null);
   }
-
   public contextValue = 'agentTest';
 }
