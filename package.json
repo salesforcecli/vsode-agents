@@ -19,6 +19,7 @@
   "dependencies": {
     "@salesforce/agents-bundle": "0.10.0",
     "@salesforce/core-bundle": "8.8.2",
+    "fast-xml-parser": "^4.5.1",
     "cross-spawn": "^7.0.6",
     "semver": "^7.7.0"
   },
@@ -44,7 +45,6 @@
     "eslint-plugin-jest-formatting": "3.1.0",
     "eslint-plugin-jsdoc": "46.8.2",
     "eslint-plugin-prefer-arrow": "1.2.3",
-    "fast-xml-parser": "^4.5.1",
     "jest": "^29.7.0",
     "jest-junit": "^16.0.0",
     "prettier": "^3.4.2",
