@@ -58,11 +58,6 @@ const registerTestView = (): vscode.Disposable => {
     vscode.commands.registerCommand(Commands.runTest, (test: AgentTestGroupNode) => testRunner.runAgentTest(test))
   );
 
-  // testViewItems.push(
-  //   // todo: expand to run all tests
-  //   vscode.commands.registerCommand('sf.agent.test.view.runAll', (test: TestNode) => testRunner.runAgentTest(test.name))
-  // );
-
   testViewItems.push(
     vscode.commands.registerCommand(Commands.refreshTestView, () => {
       return testOutlineProvider.refresh();

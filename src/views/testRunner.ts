@@ -45,18 +45,18 @@ export class AgentTestRunner {
         testInfo.testCases = testInfo.testCases.filter(f => `#${f.testNumber}` === test.name);
       }
       testInfo.testCases.map(tc => {
-        const content = ` ${testInfo.subjectName} (Test Case: ${tc.testNumber}) `;
-        const titlePadding = this.fillPadding(content.length + 4);
+        const testCaseTitle = ` ${testInfo.subjectName} (Test Case: ${tc.testNumber}) `;
         // +4, so there's two extra per side
-        channelService.appendLine(`┌${titlePadding}┐`);
-        channelService.appendLine(` ${content} `);
-        channelService.appendLine(`└${titlePadding}┘`);
+        const testCasePadding = this.fillPadding(testCaseTitle.length + 4);
+        channelService.appendLine(`┌${testCasePadding}┐`);
+        channelService.appendLine(` ${testCaseTitle} `);
+        channelService.appendLine(`└${testCasePadding}┘`);
         channelService.appendLine('');
         channelService.appendLine(`"${tc.inputs.utterance}"`);
         channelService.appendLine('');
         tc.testResults.map(tr => {
           const title = `${humanFriendlyName(tr.name)} ─ ${tr.result}`;
-          // 37 char width bottom, 20 in top chars (excluding title) => 17
+          // 37 char width bottom, 20 in top chars (excluding title) => 17 <= 17 is also longest possible combo
           const padding = this.fillPadding(17 - title.length);
           channelService.appendLine(`\t┌────────── ${title} ──${padding}────┐`);
           channelService.appendLine(`\t EXPECTED: ${tr.expectedValue.replaceAll('\n', '')}`);
@@ -100,7 +100,7 @@ export class AgentTestRunner {
       channelService.appendLine(`Starting ${test.name} tests: ${new Date().toLocaleString()}`);
       vscode.window.withProgress(
         {
-          //TODO: once we can canel in progress tests
+          //TODO: once we can cancel in progress tests
           cancellable: false,
           location: vscode.ProgressLocation.Notification,
           title: `Running ${test.name}`
@@ -118,8 +118,6 @@ export class AgentTestRunner {
               }) => {
                 switch (data.status) {
                   case 'NEW':
-                    progress.report({ increment: 5, message: `Status: ${data.status}` });
-                    break;
                   case 'IN_PROGRESS':
                     // every time IN_PROGRESS is returned, 10 is added, is possible to 100% progress bar and tests not be done
                     progress.report({ increment: 10, message: `Status: ${data.status}` });
