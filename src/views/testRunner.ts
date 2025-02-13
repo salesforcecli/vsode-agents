@@ -172,6 +172,7 @@ export class AgentTestRunner {
       channelService.appendLine('');
       channelService.appendLine(`Select a test case in the Test View panel for more information`);
     } catch (e) {
+      void Lifecycle.getInstance().emit('AGENT_TEST_POLLING_EVENT', { status: 'ERROR' });
       this.testOutline.getTestGroup(test.name)?.updateOutcome('ERROR', true);
       channelService.appendLine(`Error running test: ${(e as Error).message}`);
     }
