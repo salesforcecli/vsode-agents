@@ -23,7 +23,7 @@ const copyFiles = (src, dest) => {
 
 // copy core-bundle/lib/transformStream.js to dist if core-bundle is included
 const srcPathTransformStream = './node_modules/@salesforce/core-bundle/lib/transformStream.js';
-const destPathTransformStream = './dist/src/transformStream.js';
+const destPathTransformStream = './dist/transformStream.js';
 
 (async () => {
   await build({
@@ -31,7 +31,7 @@ const destPathTransformStream = './dist/src/transformStream.js';
     bundle: true,
     outfile: 'dist/index.js',
     format: 'cjs',
-    external: ['ink', '@salesforce/agents-bundle', 'vscode', 'react-devtools-core'],
+    external: ['vscode', 'ink', 'shelljs', 'react-devtools-core'],
     platform: 'node',
     minify: true
   });

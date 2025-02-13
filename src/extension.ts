@@ -6,32 +6,33 @@
  **/
 import * as vscode from 'vscode';
 import * as commands from './commands';
-import { sync } from 'cross-spawn';
 import { getTestOutlineProvider } from './views/testOutlineProvider';
 import { AgentTestRunner } from './views/testRunner';
 import { Commands } from './enums/commands';
 import type { AgentTestGroupNode, TestNode } from './types';
 import { CoreExtensionService } from './services/coreExtensionService';
+
 // This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-// see "contributes" property in package.json for command list
 export async function activate(context: vscode.ExtensionContext) {
   const extensionHRStart = process.hrtime();
 
   try {
-    // We need to do this first in case any other services need access to those provided by the core extension
-    CoreExtensionService.loadDependencies(context);
+    // Load dependencies in the background to avoid blocking activation
+    CoreExtensionService.loadDependencies(context).catch((err: Error) =>
+      console.error('Error loading core dependencies:', err)
+    );
 
-    const versions = sync('sf', ['version', '--verbose', '--json'], { shell: true, encoding: 'utf8' });
-    if (!versions?.output?.toString().includes('agent')) {
-      throw new Error('sf CLI + plugin-agent installed required');
-    }
+    // Validate CLI installation in the background
+    await validateCLI();
+
+    // Register commands before initializing `testRunner`
     const disposables: vscode.Disposable[] = [];
-
-    // Command Registration
     disposables.push(commands.registerOpenAgentInOrgCommand());
     context.subscriptions.push(registerTestView());
-    await getTestOutlineProvider().refresh();
+
+    // Update the test view without blocking activation
+    setTimeout(() => getTestOutlineProvider().refresh(), 0);
+
     context.subscriptions.push(...disposables);
 
     const telemetryService = CoreExtensionService.getTelemetryService();
@@ -43,19 +44,24 @@ export async function activate(context: vscode.ExtensionContext) {
 
 const registerTestView = (): vscode.Disposable => {
   const testOutlineProvider = getTestOutlineProvider();
-  const testRunner = new AgentTestRunner(testOutlineProvider);
-
-  const testViewItems = new Array<vscode.Disposable>();
+  const testViewItems: vscode.Disposable[] = [];
 
   const testProvider = vscode.window.registerTreeDataProvider('sf.agent.test.view', testOutlineProvider);
   testViewItems.push(testProvider);
 
+  // Delay the creation of `testRunner` until needed
   testViewItems.push(
-    vscode.commands.registerCommand(Commands.goToDefinition, (test: TestNode) => testRunner.goToTest(test))
+    vscode.commands.registerCommand(Commands.goToDefinition, (test: TestNode) => {
+      const testRunner = new AgentTestRunner(testOutlineProvider);
+      testRunner.goToTest(test);
+    })
   );
 
   testViewItems.push(
-    vscode.commands.registerCommand(Commands.runTest, (test: AgentTestGroupNode) => testRunner.runAgentTest(test))
+    vscode.commands.registerCommand(Commands.runTest, (test: AgentTestGroupNode) => {
+      const testRunner = new AgentTestRunner(testOutlineProvider);
+      testRunner.runAgentTest(test);
+    })
   );
 
   // testViewItems.push(
@@ -63,13 +69,29 @@ const registerTestView = (): vscode.Disposable => {
   //   vscode.commands.registerCommand('sf.agent.test.view.runAll', (test: TestNode) => testRunner.runAgentTest(test.name))
   // );
 
-  testViewItems.push(
-    vscode.commands.registerCommand(Commands.refreshTestView, () => {
-      return testOutlineProvider.refresh();
-    })
-  );
+  testViewItems.push(vscode.commands.registerCommand(Commands.refreshTestView, () => testOutlineProvider.refresh()));
 
   testViewItems.push(vscode.commands.registerCommand(Commands.collapseAll, () => testOutlineProvider.collapseAll()));
 
   return vscode.Disposable.from(...testViewItems);
+};
+
+const validateCLI = async () => {
+  try {
+    const { exec } = await import('child_process');
+    const { stdout } = await new Promise<{ stdout: string; stderr: string }>((resolve, reject) => {
+      exec('sf version --verbose --json', (error, stdout, stderr) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve({ stdout, stderr });
+        }
+      });
+    });
+    if (!stdout.includes('agent')) {
+      throw new Error('sf CLI + plugin-agent installed required');
+    }
+  } catch {
+    throw new Error('Failed to validate sf CLI and plugin-agent installation');
+  }
 };

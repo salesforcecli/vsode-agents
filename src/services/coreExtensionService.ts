@@ -22,7 +22,7 @@ export class CoreExtensionService {
   private static channelService: ChannelService;
   private static telemetryService: TelemetryService;
 
-  static loadDependencies(context: ExtensionContext) {
+  static async loadDependencies(context: ExtensionContext): Promise<void> {
     if (!CoreExtensionService.initialized) {
       const coreExtensionApi = CoreExtensionService.validateCoreExtension();
 
