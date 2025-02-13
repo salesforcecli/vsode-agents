@@ -1,20 +1,41 @@
-.vscode/**
-.vscode-test/**
-src/**
-.gitignore
-.yarnrc
-vsc-extension-quickstart.md
-**/tsconfig.json
-**/.eslintrc.json
+# Ignore TypeScript and build-related files
 **/*.map
 **/*.ts
-.github/**
-.sfdx/**
-.sf/**
-.prettierignore
-.nvmrc
-coverage/**
-jest.config.js
-test/**
-contributing/
+tsconfig.tsbuildinfo
+tsconfig.json
+src/**
+esbuild.config.js
 
+# development files
+.github/**
+esbuild.config.js
+scripts/**.vscode-test/**
+.yarnrc
+.nvmrc
+
+# Ignore documentation and extra files
+CONTRIBUTING/**
+SECURITY.md
+SHA256.md
+changelog.md
+vsc-extension-quickstart.md
+
+# ESLint, Prettier, Husky, and Commit Hooks (not needed for runtime)
+.eslintignore
+.husky/**
+.prettierignore
+.prettierrc
+.eslintrc.json
+.editorconfig
+.vscode/**
+
+# Ignore tests and linting files
+jest.config.js
+jest.setup.js
+__tests__/**
+test/**
+coverage/**
+
+# Ignore CVS files
+.git/
+.gitignore
