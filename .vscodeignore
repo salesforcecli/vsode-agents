@@ -9,11 +9,12 @@ tsconfig.tsbuildinfo
 tsconfig.json
 src/**
 esbuild.config.js
+sha/**
 
 # development files
 .github/**
 esbuild.config.js
-scripts/**.vscode-test/**
+scripts/**
 .yarnrc
 .nvmrc
 

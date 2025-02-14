@@ -31,7 +31,7 @@ const destPathTransformStream = './dist/transformStream.js';
     bundle: true,
     outfile: 'dist/index.js',
     format: 'cjs',
-    external: ['vscode', 'ink', 'shelljs', 'react-devtools-core'],
+    external: ['vscode'],
     platform: 'node',
     minify: true
   });
