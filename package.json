@@ -32,6 +32,7 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^18.19.74",
     "@types/semver": "7.5.8",
+    "@types/shelljs": "^0.8.15",
     "@types/sinon": "^17.0.3",
     "@types/vscode": "^1.90.0",
     "@typescript-eslint/eslint-plugin": "^8.22.0",
