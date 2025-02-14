@@ -30,6 +30,7 @@ jobs:
       - run: npm ci
       - run: npm --version
       - run: node --version
+      - run: npm install typescript
       - run: npm run compile
       - run: npm run bundle:extension
       - run: npx vsce package
