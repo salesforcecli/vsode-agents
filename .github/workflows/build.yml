@@ -31,7 +31,8 @@ jobs:
       - run: npm --version
       - run: node --version
       - run: npm run compile
-      - run: npx vsce package --follow-symlinks
+      - run: npm run bundle:extension
+      - run: npx vsce package
       - name: Stage Artifacts
         run: |
           mkdir extensions

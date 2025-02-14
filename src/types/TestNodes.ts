@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { TestStatus } from '@salesforce/agents';
+import { TestStatus } from '@salesforce/agents-bundle';
 import { getTestOutlineProvider } from '../views/testOutlineProvider';
 
 /**

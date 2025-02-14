@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { Commands } from '../enums/commands';
-import { SfProject } from '@salesforce/core';
+import { SfProject } from '@salesforce/core-bundle';
 import * as path from 'path';
 import { sync } from 'cross-spawn';
 
