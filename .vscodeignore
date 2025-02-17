@@ -8,7 +8,6 @@
 tsconfig.tsbuildinfo
 tsconfig.json
 src/**
-esbuild.config.js
 sha/**
 
 # development files
@@ -17,6 +16,7 @@ esbuild.config.js
 scripts/**
 .yarnrc
 .nvmrc
+node_modules
 
 # Ignore documentation and extra files
 CONTRIBUTING/**

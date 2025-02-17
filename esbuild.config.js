@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 const { build } = require('esbuild');
+const esbuildPluginPino = require('esbuild-plugin-pino');
 const fs = require('fs');
 
 const copyFiles = (src, dest) => {
@@ -27,13 +28,20 @@ const destPathTransformStream = './dist/transformStream.js';
 
 (async () => {
   await build({
-    entryPoints: ['./src/extension.ts'],
     bundle: true,
-    outfile: 'dist/index.js',
-    format: 'cjs',
+    entryPoints: ['./src/extension.ts'],
     external: ['vscode'],
+    format: 'cjs',
+    keepNames: true,
+    loader: { '.node': 'file' },
+    logOverride: {
+      'unsupported-dynamic-import': 'error'
+    },
+    minify: true,
+    outdir: 'dist',
     platform: 'node',
-    minify: true
+    plugins: [esbuildPluginPino({ transports: ['pino-pretty'] })],
+    supported: { 'dynamic-import': false }
   });
 })()
   .then(() => {

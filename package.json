@@ -39,6 +39,7 @@
     "commitizen": "^4.3.1",
     "cz-conventional-changelog": "3.3.0",
     "esbuild": "^0.23.1",
+    "esbuild-plugin-pino": "^2.2.1",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "9.0.0",
     "eslint-plugin-header": "3.1.1",
@@ -71,7 +72,7 @@
     "test": "jest --coverage",
     "bundle:extension": "node ./esbuild.config.js",
     "vscode:package": "npm run compile && npm run bundle:extension & npx vsce package",
-    "vscode:prepublish": "npm run compile && npm run bundle:extension && npm run update-for-packaging",
+    "vscode:prepublish": "npm run update-for-packaging",
     "update-for-packaging": "ts-node scripts/updatePackageJsonForVSIX.ts",
     "vsix:install": "find ./ -name '*.vsix' -exec code --install-extension {}",
     "vsix:install-insiders": "find ./ -name '*.vsix' -exec code-insiders --install-extension {}",
@@ -88,7 +89,7 @@
       "dist"
     ],
     "packageUpdates": {
-      "main": "dist/index.js",
+      "main": "dist/extension.js",
       "dependencies": {
         "shelljs": "0.8.5",
         "cross-spawn": "^7.0.6",
