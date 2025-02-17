@@ -5,6 +5,7 @@
  * For full license text, see LICENSE.txt file in the repo root or https://opensource.org/licenses/BSD-3-Clause
  */
 const { build } = require('esbuild');
+const esbuildPluginPino = require('esbuild-plugin-pino');
 const fs = require('fs');
 
 const copyFiles = (src, dest) => {
@@ -25,15 +26,29 @@ const copyFiles = (src, dest) => {
 const srcPathTransformStream = './node_modules/@salesforce/core-bundle/lib/transformStream.js';
 const destPathTransformStream = './dist/transformStream.js';
 
+const sharedConfig = {
+  bundle: true,
+  format: 'cjs',
+  platform: 'node',
+  loader: { '.node': 'file' },
+  minify: true,
+  keepNames: true,
+  external: ['vscode'],
+  plugins: [esbuildPluginPino({ transports: ['pino-pretty'] })],
+  supported: {
+    'dynamic-import': false
+  },
+  logOverride: {
+    'unsupported-dynamic-import': 'error'
+  }
+};
+
 (async () => {
   await build({
+    ...sharedConfig,
     entryPoints: ['./src/extension.ts'],
-    bundle: true,
-    outfile: 'dist/index.js',
-    format: 'cjs',
-    external: ['vscode'],
-    platform: 'node',
-    minify: true
+    outdir: 'dist',
+    minify: false // remove after debugging done
   });
 })()
   .then(() => {
