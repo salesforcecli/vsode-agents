@@ -1,19 +1,15 @@
 # [0.2.0](https://github.com/salesforcecli/vsode-agents/compare/v0.1.0...v0.2.0) (2025-02-17)
 
-
 ### Bug Fixes
 
-* remove unused message ([5870fc7](https://github.com/salesforcecli/vsode-agents/commit/5870fc7f2b2231e9e4bc35dcb9b4037bc48b012c))
-* update Agents lib, fix colors in scenarios W-17775110 ([3415f49](https://github.com/salesforcecli/vsode-agents/commit/3415f493ed0f89765efd3ffb9c30aefe9b348c87))
-* update where API name is parsed from ([6b53581](https://github.com/salesforcecli/vsode-agents/commit/6b535810f713c5ff02aa4685ecff9f2418237de7))
-
+- remove unused message ([5870fc7](https://github.com/salesforcecli/vsode-agents/commit/5870fc7f2b2231e9e4bc35dcb9b4037bc48b012c))
+- update Agents lib, fix colors in scenarios W-17775110 ([3415f49](https://github.com/salesforcecli/vsode-agents/commit/3415f493ed0f89765efd3ffb9c30aefe9b348c87))
+- update where API name is parsed from ([6b53581](https://github.com/salesforcecli/vsode-agents/commit/6b535810f713c5ff02aa4685ecff9f2418237de7))
 
 ### Features
 
-* add detailed test output ([0f01196](https://github.com/salesforcecli/vsode-agents/commit/0f0119644a42d584d09b77e0cc25e89bcbfebec0))
-* add progress popup, clean up test result panel ([da9895e](https://github.com/salesforcecli/vsode-agents/commit/da9895e129e33a2cd8c4472c60c89f0562ff89c6))
-
-
+- add detailed test output ([0f01196](https://github.com/salesforcecli/vsode-agents/commit/0f0119644a42d584d09b77e0cc25e89bcbfebec0))
+- add progress popup, clean up test result panel ([da9895e](https://github.com/salesforcecli/vsode-agents/commit/da9895e129e33a2cd8c4472c60c89f0562ff89c6))
 
 # 0.1.0 (2025-01-31)
 
