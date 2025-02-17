@@ -143,7 +143,7 @@ export class AgentTestRunner {
         }
       );
 
-      const response = await tester.start(test.name, 'name');
+      const response = await tester.start(test.name);
       // begin in-progress
       this.testOutline.getTestGroup(test.name)?.updateOutcome('IN_PROGRESS', true);
       channelService.appendLine(`Job Id: ${response.runId}`);
