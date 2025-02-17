@@ -8,8 +8,8 @@
 import * as events from 'events';
 import * as vscode from 'vscode';
 import { AgentTestOutlineProvider } from './testOutlineProvider';
-import { AgentTester, TestStatus, AgentTestResultsResponse, humanFriendlyName } from '@salesforce/agents';
-import { ConfigAggregator, Lifecycle, Org } from '@salesforce/core';
+import { AgentTester, TestStatus, AgentTestResultsResponse, humanFriendlyName } from '@salesforce/agents-bundle';
+import { ConfigAggregator, Lifecycle, Org } from '@salesforce/core-bundle';
 import { Duration } from '@salesforce/kit';
 import type { AgentTestGroupNode, TestNode } from '../types';
 import { CoreExtensionService } from '../services/coreExtensionService';
@@ -143,7 +143,7 @@ export class AgentTestRunner {
         }
       );
 
-      const response = await tester.start(test.name, 'name');
+      const response = await tester.start(test.name);
       // begin in-progress
       this.testOutline.getTestGroup(test.name)?.updateOutcome('IN_PROGRESS', true);
       channelService.appendLine(`Job Id: ${response.runId}`);
