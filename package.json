@@ -89,7 +89,7 @@
       "dist"
     ],
     "packageUpdates": {
-      "main": "dist/index.js",
+      "main": "dist/extension.js",
       "dependencies": {
         "shelljs": "0.8.5",
         "cross-spawn": "^7.0.6",
