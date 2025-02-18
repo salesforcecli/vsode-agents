@@ -79,7 +79,6 @@ If you want detailed instructions:
 This part will run through steps for publishing a new release.
 
 1. Navigate to each GitHub Action below and execute them on the `release/MM-DD-YYYY-#` branch. The typical order is outlined below to ensure things go out in priority order:
-   - `Update Public Repository with New Release`: Copies the release to the public repository.
    - `Publish in Microsoft Marketplace`: Publishes to the VSCode marketplace.
    - `Publish in Open VSX Registry`: Publishes to the openvsix marketplace.
 2. Ensure that the extension release version in Microsoft Marketplace and Open VSX Registry are now updated (they may take a few minutes to update):
