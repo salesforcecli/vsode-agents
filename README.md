@@ -1,16 +1,12 @@
 # Agents
 
----
-
-# :warning: UNDER ACTIVE DEVELOPMENT :warning:
-
----
-
 ## How to Use
 
 1. Open Agents in an org by running the 'Open Agent In Default Org' command, found in the command palette, or right-click context menu in `.botVersion`, `.bot`, `.genAiPlanner`, or `.genAiDefinition` files
 
 2. Run Agent Tests by viewing them in the Agent Testing Panel
+   1. View detailed information of a test definition by clicking on it
+   2. View detailed information of a test case by clicking on it
 
 ## Prerequisites
 
